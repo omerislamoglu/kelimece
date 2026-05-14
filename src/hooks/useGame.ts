@@ -1,4 +1,4 @@
-import { useState, useCallback, useEffect } from 'react'
+import { useState, useCallback, useEffect, useMemo } from 'react'
 import type { Puzzle } from '../types'
 import { generateDailyPuzzle, calculateScore } from '../lib/puzzle'
 
@@ -134,11 +134,20 @@ export function useGame() {
     }
   }, [puzzle, currentInput, foundWords, showMessage])
 
+  const maxScore = useMemo(() => {
+    if (!puzzle) return 0
+    return puzzle.validWords.reduce(
+      (sum, w) => sum + calculateScore(w, puzzle.letters),
+      0,
+    )
+  }, [puzzle])
+
   return {
     puzzle,
     foundWords,
     currentInput,
     score,
+    maxScore,
     message,
     addLetter,
     removeLetter,

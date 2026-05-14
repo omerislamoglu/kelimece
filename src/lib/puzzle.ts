@@ -178,7 +178,7 @@ export function calculateScore(word: string, letters: string[]): number {
   return baseScore + (isPangram ? 7 : 0)
 }
 
-const RANKS = [
+export const RANKS = [
   { threshold: 0, label: 'Acemi' },
   { threshold: 0.05, label: 'Başlangıç' },
   { threshold: 0.15, label: 'Orta' },
