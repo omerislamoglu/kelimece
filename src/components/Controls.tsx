@@ -51,22 +51,22 @@ export default function Controls({
   }, [letters, onLetterClick, onDelete, onShuffle, onSubmit])
 
   return (
-    <div className="flex items-center justify-center gap-3">
+    <div className="flex items-center justify-center gap-4">
       <button
         type="button"
         onClick={onDelete}
-        className="rounded-full border-2 border-gray-300 px-5 py-2.5 text-sm font-semibold
-                   text-gray-600 transition-colors hover:border-gray-400 hover:text-gray-800
-                   active:bg-gray-100"
+        className="rounded-full border-2 border-cream-300 bg-white px-6 py-3 text-sm
+                   font-semibold text-bark-600 transition-all duration-150
+                   hover:border-honey-400 hover:text-bark-800 active:scale-95"
       >
         Sil
       </button>
       <button
         type="button"
         onClick={onShuffle}
-        className="rounded-full border-2 border-gray-300 p-2.5 text-gray-500
-                   transition-colors hover:border-gray-400 hover:text-gray-700
-                   active:bg-gray-100"
+        className="rounded-full border-2 border-cream-300 bg-white p-3 text-bark-600
+                   transition-all duration-150 hover:border-honey-400
+                   hover:text-bark-800 active:rotate-180 active:scale-95"
         aria-label="Harfleri karıştır"
       >
         <svg
@@ -74,7 +74,7 @@ export default function Controls({
           viewBox="0 0 24 24"
           fill="none"
           stroke="currentColor"
-          strokeWidth={2}
+          strokeWidth={2.5}
           strokeLinecap="round"
           strokeLinejoin="round"
           className="h-5 w-5"
@@ -89,9 +89,10 @@ export default function Controls({
       <button
         type="button"
         onClick={onSubmit}
-        className="rounded-full bg-amber-400 px-5 py-2.5 text-sm font-semibold
-                   text-amber-950 transition-colors hover:bg-amber-300
-                   active:bg-amber-500"
+        className="rounded-full bg-honey-400 px-6 py-3 text-sm font-bold
+                   text-bark-800 shadow-md shadow-honey-400/30
+                   transition-all duration-150 hover:bg-honey-300
+                   hover:shadow-lg hover:shadow-honey-400/40 active:scale-95"
       >
         Gönder
       </button>

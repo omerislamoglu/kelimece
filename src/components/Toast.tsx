@@ -12,7 +12,6 @@ export default function Toast({ message }: ToastProps) {
     if (message) {
       setCurrent(message)
       setVisible(true)
-
       const timer = setTimeout(() => setVisible(false), 1700)
       return () => clearTimeout(timer)
     } else {
@@ -27,25 +26,24 @@ export default function Toast({ message }: ToastProps) {
 
   return (
     <div
-      className={`pointer-events-none fixed left-1/2 top-16 z-50 -translate-x-1/2
-        transition-all duration-300 ${
+      className={`pointer-events-none fixed left-1/2 top-12 z-[60] -translate-x-1/2
+        transition-all duration-300 ease-out ${
           visible
-            ? 'translate-y-0 opacity-100'
-            : '-translate-y-4 opacity-0'
+            ? 'translate-y-0 scale-100 opacity-100'
+            : '-translate-y-3 scale-95 opacity-0'
         }`}
     >
       <div
-        className={`rounded-xl px-5 py-3 text-center text-sm font-semibold shadow-lg ${
+        className={`rounded-2xl px-5 py-2.5 text-center text-sm font-bold shadow-lg ${
           isPangram
-            ? 'bg-gradient-to-r from-amber-400 to-yellow-300 text-amber-950 ring-2 ring-amber-500/30'
+            ? 'bg-gradient-to-r from-honey-400 to-honey-300 text-bark-800 shadow-honey-400/40 ring-2 ring-honey-500/20'
             : current.type === 'success'
-              ? 'bg-green-500 text-white'
+              ? 'bg-bark-800 text-cream-100'
               : current.type === 'error'
-                ? 'bg-gray-800 text-white'
-                : 'bg-blue-500 text-white'
+                ? 'bg-bark-900 text-cream-200'
+                : 'bg-bark-700 text-cream-200'
         }`}
       >
-        {isPangram && <span className="mr-1">*</span>}
         {current.text}
       </div>
     </div>

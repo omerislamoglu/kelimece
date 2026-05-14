@@ -1,8 +1,28 @@
 @import "tailwindcss";
 
 @theme {
+  --font-sans: 'Quicksand', system-ui, sans-serif;
+
+  --color-cream-50: #fffdf7;
+  --color-cream-100: #fef9ed;
+  --color-cream-200: #fdf0d5;
+  --color-cream-300: #f5e1b8;
+
+  --color-honey-300: #fcd34d;
+  --color-honey-400: #f6b93b;
+  --color-honey-500: #d4981a;
+  --color-honey-600: #b07d12;
+
+  --color-bark-600: #5c4033;
+  --color-bark-700: #4a3228;
+  --color-bark-800: #3b2720;
+  --color-bark-900: #2c1d18;
+
   --animate-blink: blink 1s step-end infinite;
-  --animate-rank: rank-pop 0.3s ease-out;
+  --animate-rank-pop: rank-pop 0.3s ease-out;
+  --animate-letter-pop: letter-pop 0.15s ease-out;
+  --animate-slide-up: slide-up 0.3s ease-out;
+  --animate-fade-in: fade-in 0.2s ease-out;
 }
 
 @keyframes blink {
@@ -14,4 +34,24 @@
   0% { transform: scale(1); }
   50% { transform: scale(1.15); }
   100% { transform: scale(1); }
+}
+
+@keyframes letter-pop {
+  0% { transform: scale(0.8); opacity: 0; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes slide-up {
+  0% { transform: translateY(100%); }
+  100% { transform: translateY(0); }
+}
+
+@keyframes fade-in {
+  0% { opacity: 0; }
+  100% { opacity: 1; }
+}
+
+body {
+  background-color: var(--color-cream-50);
+  -webkit-tap-highlight-color: transparent;
 }

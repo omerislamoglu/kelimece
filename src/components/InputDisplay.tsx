@@ -8,26 +8,24 @@ export default function InputDisplay({
   centerLetter,
 }: InputDisplayProps) {
   return (
-    <div className="flex min-h-[3rem] items-center justify-center">
+    <div className="flex min-h-[3.5rem] items-center justify-center border-b-2 border-cream-300 px-2 pb-1">
       {currentInput.length === 0 ? (
-        <span className="text-2xl text-gray-300">
-          <span className="inline-block w-[2px] h-7 bg-gray-400 animate-pulse" />
-        </span>
+        <span className="inline-block h-8 w-[2px] animate-blink bg-honey-400" />
       ) : (
         <div className="flex items-center">
           {[...currentInput].map((letter, i) => (
             <span
               key={i}
-              className={`text-3xl sm:text-4xl font-bold uppercase tracking-wider ${
+              className={`animate-letter-pop text-[clamp(1.75rem,6vw,2.5rem)] font-bold uppercase tracking-wide ${
                 letter === centerLetter
-                  ? 'text-amber-500'
-                  : 'text-gray-800'
+                  ? 'text-honey-500'
+                  : 'text-bark-800'
               }`}
             >
               {letter}
             </span>
           ))}
-          <span className="inline-block w-[2px] h-8 ml-0.5 bg-amber-500 animate-blink" />
+          <span className="ml-0.5 inline-block h-8 w-[2px] animate-blink bg-honey-400" />
         </div>
       )}
     </div>

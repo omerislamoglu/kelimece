@@ -6,6 +6,15 @@ import ScoreBar from './components/ScoreBar'
 import FoundWords from './components/FoundWords'
 import Toast from './components/Toast'
 
+function formatTurkishDate(dateStr: string): string {
+  const months = [
+    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
+    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+  ]
+  const [y, m, d] = dateStr.split('-').map(Number)
+  return `${d} ${months[m - 1]} ${y}`
+}
+
 function App() {
   const {
     puzzle,
@@ -23,14 +32,24 @@ function App() {
   if (!puzzle) return null
 
   return (
-    <div className="flex min-h-screen flex-col items-center bg-gray-50 px-4 py-6">
-      <h1 className="mb-4 text-3xl font-bold text-gray-900">Kelimece</h1>
-
+    <div className="mx-auto flex min-h-[100dvh] max-w-lg flex-col bg-cream-50 sm:my-4 sm:min-h-0 sm:rounded-3xl sm:shadow-xl sm:shadow-bark-900/5">
       <Toast message={message} />
 
-      <ScoreBar score={score} maxScore={maxScore} />
+      {/* Header */}
+      <header className="px-5 pt-5 pb-3">
+        <div className="mb-1 flex items-center justify-between">
+          <h1 className="text-2xl font-bold tracking-tight text-bark-800">
+            Kelimece
+          </h1>
+          <span className="text-xs font-medium text-bark-600/50">
+            {formatTurkishDate(puzzle.date)}
+          </span>
+        </div>
+        <ScoreBar score={score} maxScore={maxScore} />
+      </header>
 
-      <div className="mt-4 w-full max-w-sm">
+      {/* Bulunan kelimeler toggle */}
+      <div className="px-5 pb-2">
         <FoundWords
           foundWords={foundWords}
           totalWords={puzzle.validWords.length}
@@ -38,7 +57,8 @@ function App() {
         />
       </div>
 
-      <div className="flex flex-1 flex-col items-center justify-center gap-6 py-6">
+      {/* Oyun alanı — dikeyde ortala, mobilde alt yarıda kalsın */}
+      <main className="flex flex-1 flex-col items-center justify-center gap-5 px-5 pb-8 pt-2">
         <InputDisplay
           currentInput={currentInput}
           centerLetter={puzzle.centerLetter}
@@ -57,7 +77,7 @@ function App() {
           onShuffle={shuffleLetters}
           onSubmit={submitWord}
         />
-      </div>
+      </main>
     </div>
   )
 }
