@@ -1,5 +1,5 @@
-import { useState } from 'react'
-import { BarChart3, Flag } from 'lucide-react'
+import { useState, useEffect } from 'react'
+import { BarChart3, Flag, HelpCircle } from 'lucide-react'
 import { useGame } from './hooks/useGame'
 import LetterGrid from './components/LetterGrid'
 import InputDisplay from './components/InputDisplay'
@@ -10,6 +10,7 @@ import Toast from './components/Toast'
 import ShareButton from './components/ShareButton'
 import GameComplete from './components/GameComplete'
 import StatsPanel from './components/StatsPanel'
+import Tutorial, { isTutorialCompleted, resetTutorial } from './components/Tutorial'
 
 function formatTurkishDate(dateStr: string): string {
   const months = [
@@ -40,6 +41,18 @@ function App() {
   } = useGame()
 
   const [showStats, setShowStats] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(false)
+
+  useEffect(() => {
+    if (!isTutorialCompleted()) {
+      setShowTutorial(true)
+    }
+  }, [])
+
+  function handleShowTutorial() {
+    resetTutorial()
+    setShowTutorial(true)
+  }
 
   if (!puzzle) return null
 
@@ -57,6 +70,12 @@ function App() {
             <span className="text-xs font-medium text-surface-400">
               {formatTurkishDate(puzzle.date)}
             </span>
+            <button
+              onClick={handleShowTutorial}
+              className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300"
+            >
+              <HelpCircle className="h-5 w-5" />
+            </button>
             <button
               onClick={() => setShowStats(true)}
               className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300"
@@ -140,6 +159,8 @@ function App() {
       )}
 
       {showStats && <StatsPanel onClose={() => setShowStats(false)} />}
+
+      {showTutorial && <Tutorial onComplete={() => setShowTutorial(false)} />}
     </div>
   )
 }
