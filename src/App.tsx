@@ -5,6 +5,7 @@ import Controls from './components/Controls'
 import ScoreBar from './components/ScoreBar'
 import FoundWords from './components/FoundWords'
 import Toast from './components/Toast'
+import ShareButton from './components/ShareButton'
 
 function formatTurkishDate(dateStr: string): string {
   const months = [
@@ -27,6 +28,7 @@ function App() {
     removeLetter,
     shuffleLetters,
     submitWord,
+    showMessage,
   } = useGame()
 
   if (!puzzle) return null
@@ -41,9 +43,18 @@ function App() {
           <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-100">
             Kelimece
           </h1>
-          <span className="text-xs font-medium text-surface-400">
-            {formatTurkishDate(puzzle.date)}
-          </span>
+          <div className="flex items-center gap-3">
+            <span className="text-xs font-medium text-surface-400">
+              {formatTurkishDate(puzzle.date)}
+            </span>
+            <ShareButton
+              puzzle={puzzle}
+              foundWords={foundWords}
+              score={score}
+              maxScore={maxScore}
+              onMessage={showMessage}
+            />
+          </div>
         </div>
         <ScoreBar score={score} maxScore={maxScore} />
       </header>

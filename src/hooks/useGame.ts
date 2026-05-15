@@ -154,5 +154,6 @@ export function useGame() {
     clearInput,
     shuffleLetters,
     submitWord,
+    showMessage,
   }
 }
