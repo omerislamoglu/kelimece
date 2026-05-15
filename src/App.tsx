@@ -1,3 +1,5 @@
+import { useState } from 'react'
+import { BarChart3, Flag } from 'lucide-react'
 import { useGame } from './hooks/useGame'
 import LetterGrid from './components/LetterGrid'
 import InputDisplay from './components/InputDisplay'
@@ -6,6 +8,8 @@ import ScoreBar from './components/ScoreBar'
 import FoundWords from './components/FoundWords'
 import Toast from './components/Toast'
 import ShareButton from './components/ShareButton'
+import GameComplete from './components/GameComplete'
+import StatsPanel from './components/StatsPanel'
 
 function formatTurkishDate(dateStr: string): string {
   const months = [
@@ -24,12 +28,18 @@ function App() {
     score,
     maxScore,
     message,
+    gameComplete,
+    finished,
     addLetter,
     removeLetter,
     shuffleLetters,
     submitWord,
     showMessage,
+    endGame,
+    setGameComplete,
   } = useGame()
+
+  const [showStats, setShowStats] = useState(false)
 
   if (!puzzle) return null
 
@@ -43,10 +53,16 @@ function App() {
           <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-100">
             Kelimece
           </h1>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
             <span className="text-xs font-medium text-surface-400">
               {formatTurkishDate(puzzle.date)}
             </span>
+            <button
+              onClick={() => setShowStats(true)}
+              className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300"
+            >
+              <BarChart3 className="h-5 w-5" />
+            </button>
             <ShareButton
               puzzle={puzzle}
               foundWords={foundWords}
@@ -88,7 +104,42 @@ function App() {
           onShuffle={shuffleLetters}
           onSubmit={submitWord}
         />
+
+        {/* Bugünü Bitir butonu */}
+        {!finished && foundWords.length > 0 && (
+          <button
+            onClick={endGame}
+            className="inline-flex items-center gap-2 rounded-xl border border-surface-300 px-4 py-2 text-sm font-medium text-surface-500 transition-colors hover:border-surface-400 hover:text-surface-700 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-500 dark:hover:text-surface-300"
+          >
+            <Flag className="h-4 w-4" />
+            Bugunu Bitir
+          </button>
+        )}
+
+        {/* Bitmiş oyun için tekrar göster */}
+        {finished && !gameComplete && (
+          <button
+            onClick={() => setGameComplete(true)}
+            className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-accent-400 dark:hover:text-accent-300"
+          >
+            Sonuclari Gor
+          </button>
+        )}
       </main>
+
+      {/* Modallar */}
+      {gameComplete && (
+        <GameComplete
+          puzzle={puzzle}
+          foundWords={foundWords}
+          score={score}
+          maxScore={maxScore}
+          onClose={() => setGameComplete(false)}
+          onMessage={showMessage}
+        />
+      )}
+
+      {showStats && <StatsPanel onClose={() => setShowStats(false)} />}
     </div>
   )
 }

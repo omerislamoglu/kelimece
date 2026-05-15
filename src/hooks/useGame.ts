@@ -1,6 +1,7 @@
-import { useState, useCallback, useEffect, useMemo } from 'react'
+import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Puzzle } from '../types'
 import { generateDailyPuzzle, calculateScore } from '../lib/puzzle'
+import { updateStats } from '../lib/stats'
 
 interface GameMessage {
   text: string
@@ -11,6 +12,7 @@ interface SavedState {
   date: string
   foundWords: string[]
   score: number
+  finished: boolean
 }
 
 const STORAGE_KEY = 'kelimece-game'
@@ -27,8 +29,8 @@ function loadSavedState(date: string): SavedState | null {
   }
 }
 
-function saveState(date: string, foundWords: string[], score: number) {
-  const state: SavedState = { date, foundWords, score }
+function saveState(date: string, foundWords: string[], score: number, finished: boolean) {
+  const state: SavedState = { date, foundWords, score, finished }
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
 }
 
@@ -38,6 +40,9 @@ export function useGame() {
   const [currentInput, setCurrentInput] = useState('')
   const [score, setScore] = useState(0)
   const [message, setMessage] = useState<GameMessage | null>(null)
+  const [gameComplete, setGameComplete] = useState(false)
+  const [finished, setFinished] = useState(false)
+  const statsRecorded = useRef(false)
 
   // Puzzle'ı oluştur ve kayıtlı durumu yükle
   useEffect(() => {
@@ -49,14 +54,18 @@ export function useGame() {
     if (saved) {
       setFoundWords(saved.foundWords)
       setScore(saved.score)
+      if (saved.finished) {
+        setFinished(true)
+        statsRecorded.current = true
+      }
     }
   }, [])
 
   // foundWords veya score değiştiğinde localStorage'a kaydet
   useEffect(() => {
     if (!puzzle) return
-    saveState(puzzle.date, foundWords, score)
-  }, [puzzle, foundWords, score])
+    saveState(puzzle.date, foundWords, score, finished)
+  }, [puzzle, foundWords, score, finished])
 
   const showMessage = useCallback(
     (text: string, type: GameMessage['type']) => {
@@ -88,6 +97,17 @@ export function useGame() {
     }
     setPuzzle({ ...puzzle, letters: [center, ...shuffled] })
   }, [puzzle])
+
+  const finishGame = useCallback(
+    (date: string, finalScore: number, wordsFound: number) => {
+      if (statsRecorded.current) return
+      statsRecorded.current = true
+      setFinished(true)
+      setGameComplete(true)
+      updateStats(date, finalScore, wordsFound)
+    },
+    [],
+  )
 
   const submitWord = useCallback(() => {
     if (!puzzle) return
@@ -132,7 +152,18 @@ export function useGame() {
     } else {
       showMessage(`+${points} puan`, 'success')
     }
-  }, [puzzle, currentInput, foundWords, showMessage])
+
+    // Tüm kelimeler bulunduysa otomatik oyun bitişi
+    const newFoundWords = [...foundWords, word]
+    if (puzzle.validWords.length === newFoundWords.length) {
+      finishGame(puzzle.date, score + points, newFoundWords.length)
+    }
+  }, [puzzle, currentInput, foundWords, score, showMessage, finishGame])
+
+  const endGame = useCallback(() => {
+    if (!puzzle) return
+    finishGame(puzzle.date, score, foundWords.length)
+  }, [puzzle, score, foundWords.length, finishGame])
 
   const maxScore = useMemo(() => {
     if (!puzzle) return 0
@@ -149,11 +180,15 @@ export function useGame() {
     score,
     maxScore,
     message,
+    gameComplete,
+    finished,
     addLetter,
     removeLetter,
     clearInput,
     shuffleLetters,
     submitWord,
     showMessage,
+    endGame,
+    setGameComplete,
   }
 }
