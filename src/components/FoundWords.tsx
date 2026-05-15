@@ -26,6 +26,8 @@ export default function FoundWords({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
+        aria-expanded={isOpen}
+        aria-label={`Bulunan kelimeler: ${foundWords.length} / ${totalWords}`}
         className="flex w-full items-center justify-between rounded-2xl
                    border border-surface-200 bg-white/80 px-4 py-3
                    text-left backdrop-blur-sm transition-all duration-200
@@ -76,6 +78,7 @@ export default function FoundWords({
               <button
                 type="button"
                 onClick={() => setIsOpen(false)}
+                aria-label="Kelime listesini kapat"
                 className="rounded-full p-1 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-700 dark:hover:bg-surface-700 dark:hover:text-surface-300"
               >
                 <X className="h-4 w-4" />

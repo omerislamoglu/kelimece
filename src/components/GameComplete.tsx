@@ -70,6 +70,9 @@ export default function GameComplete({
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-200 ${
         visible ? 'bg-black/50 backdrop-blur-sm' : 'bg-transparent'
       }`}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Oyun sonucu"
       onClick={(e) => {
         if (e.target === e.currentTarget) handleClose()
       }}
@@ -84,6 +87,7 @@ export default function GameComplete({
         {/* Kapat butonu */}
         <button
           onClick={handleClose}
+          aria-label="Kapat"
           className="absolute right-4 top-4 rounded-lg p-1 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300"
         >
           <X className="h-5 w-5" />

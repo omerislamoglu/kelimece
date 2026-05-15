@@ -36,6 +36,7 @@ export default function ShareButton({
     <button
       onClick={handleShare}
       disabled={disabled}
+      aria-label="Sonucu paylas"
       className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700 active:bg-primary-800 disabled:cursor-not-allowed disabled:opacity-40"
     >
       <Share2 className="h-4 w-4" />

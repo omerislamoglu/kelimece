@@ -4,9 +4,10 @@ import { RANKS, getRankFromScore } from '../lib/puzzle'
 interface ScoreBarProps {
   score: number
   maxScore: number
+  scoreBump?: boolean
 }
 
-export default function ScoreBar({ score, maxScore }: ScoreBarProps) {
+export default function ScoreBar({ score, maxScore, scoreBump }: ScoreBarProps) {
   const rank = getRankFromScore(score, maxScore)
   const ratio = maxScore > 0 ? score / maxScore : 0
   const percentage = Math.min(ratio * 100, 100)
@@ -21,7 +22,7 @@ export default function ScoreBar({ score, maxScore }: ScoreBarProps) {
   }, [score, maxScore])
 
   return (
-    <div className="w-full">
+    <div className="w-full" role="progressbar" aria-valuenow={score} aria-valuemax={maxScore} aria-label={`Skor: ${score}, Rutbe: ${rank}`}>
       <div className="mb-2 flex items-baseline justify-between">
         <span
           key={rank}
@@ -29,7 +30,7 @@ export default function ScoreBar({ score, maxScore }: ScoreBarProps) {
         >
           {rank}
         </span>
-        <span className="text-xs font-medium text-surface-400">
+        <span className={`text-xs font-medium text-surface-400 ${scoreBump ? 'animate-score-bump' : ''}`}>
           {score} puan
         </span>
       </div>

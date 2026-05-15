@@ -31,10 +31,11 @@ function LetterButton({
     <button
       type="button"
       onClick={handleClick}
+      aria-label={`Harf ${letter.toUpperCase()}${isCenter ? ' (merkez)' : ''}`}
       className={`
         absolute flex items-center justify-center rounded-full
         font-bold uppercase select-none cursor-pointer
-        transition-all duration-150
+        transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none
         ${pressed ? 'scale-90' : 'scale-100'}
         ${
           isCenter
@@ -60,6 +61,8 @@ export default function LetterGrid({
     <div
       className="relative mx-auto"
       style={{ width: '240px', height: '240px' }}
+      role="group"
+      aria-label="Harf griди"
     >
       {/* Center letter */}
       <LetterButton

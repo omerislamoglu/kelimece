@@ -2,11 +2,15 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import type { Puzzle } from '../types'
 import { generateDailyPuzzle, calculateScore } from '../lib/puzzle'
 import { updateStats } from '../lib/stats'
+import { playSound, vibrate } from '../lib/sounds'
+import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
 
 interface GameMessage {
   text: string
   type: 'success' | 'error' | 'info'
 }
+
+export type InputFeedback = 'success' | 'error' | 'pangram' | null
 
 interface SavedState {
   date: string
@@ -42,9 +46,11 @@ export function useGame() {
   const [message, setMessage] = useState<GameMessage | null>(null)
   const [gameComplete, setGameComplete] = useState(false)
   const [finished, setFinished] = useState(false)
+  const [inputFeedback, setInputFeedback] = useState<InputFeedback>(null)
+  const [scoreBump, setScoreBump] = useState(false)
   const statsRecorded = useRef(false)
 
-  // Puzzle'ı oluştur ve kayıtlı durumu yükle
+  // Puzzle'i olustur ve kayitli durumu yukle
   useEffect(() => {
     const today = new Date()
     const dailyPuzzle = generateDailyPuzzle(today)
@@ -61,7 +67,7 @@ export function useGame() {
     }
   }, [])
 
-  // foundWords veya score değiştiğinde localStorage'a kaydet
+  // foundWords veya score degistiginde localStorage'a kaydet
   useEffect(() => {
     if (!puzzle) return
     saveState(puzzle.date, foundWords, score, finished)
@@ -75,8 +81,20 @@ export function useGame() {
     [],
   )
 
+  const triggerFeedback = useCallback((type: InputFeedback) => {
+    setInputFeedback(type)
+    setTimeout(() => setInputFeedback(null), 500)
+  }, [])
+
+  const triggerScoreBump = useCallback(() => {
+    setScoreBump(true)
+    setTimeout(() => setScoreBump(false), 300)
+  }, [])
+
   const addLetter = useCallback((letter: string) => {
     setCurrentInput((prev) => prev + letter)
+    playSound('click')
+    vibrate(10)
   }, [])
 
   const removeLetter = useCallback(() => {
@@ -96,6 +114,8 @@ export function useGame() {
       ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
     }
     setPuzzle({ ...puzzle, letters: [center, ...shuffled] })
+    playSound('click')
+    vibrate(10)
   }, [puzzle])
 
   const finishGame = useCallback(
@@ -117,27 +137,41 @@ export function useGame() {
 
     if (word.length < 4) {
       showMessage('En az 4 harf gerekli', 'error')
+      triggerFeedback('error')
+      playSound('error')
+      vibrate([30, 50, 30])
       return
     }
 
     if (!word.includes(puzzle.centerLetter)) {
-      showMessage('Merkez harf kullanılmalı', 'error')
+      showMessage('Merkez harf kullanilmali', 'error')
+      triggerFeedback('error')
+      playSound('error')
+      vibrate([30, 50, 30])
       return
     }
 
     const letterSet = new Set(puzzle.letters)
     if (![...word].every((ch) => letterSet.has(ch))) {
-      showMessage('Sadece verilen harfler kullanılabilir', 'error')
+      showMessage('Sadece verilen harfler kullanilabilir', 'error')
+      triggerFeedback('error')
+      playSound('error')
+      vibrate([30, 50, 30])
       return
     }
 
     if (foundWords.includes(word)) {
       showMessage('Bu kelimeyi zaten buldunuz', 'info')
+      triggerFeedback('error')
+      playSound('error')
       return
     }
 
     if (!puzzle.validWords.includes(word)) {
-      showMessage('Geçerli bir kelime değil', 'error')
+      showMessage('Gecerli bir kelime degil', 'error')
+      triggerFeedback('error')
+      playSound('error')
+      vibrate([30, 50, 30])
       return
     }
 
@@ -146,19 +180,28 @@ export function useGame() {
 
     setFoundWords((prev) => [...prev, word])
     setScore((prev) => prev + points)
+    triggerScoreBump()
 
     if (isPangram) {
       showMessage(`Tam Kelime! +${points} puan`, 'success')
+      triggerFeedback('pangram')
+      playSound('pangram')
+      vibrate([50, 30, 50, 30, 80])
+      firePangramConfetti()
     } else {
       showMessage(`+${points} puan`, 'success')
+      triggerFeedback('success')
+      playSound('success')
+      vibrate(20)
     }
 
-    // Tüm kelimeler bulunduysa otomatik oyun bitişi
+    // Tum kelimeler bulunduysa otomatik oyun bitisi
     const newFoundWords = [...foundWords, word]
     if (puzzle.validWords.length === newFoundWords.length) {
+      setTimeout(() => fireAllFoundConfetti(), 500)
       finishGame(puzzle.date, score + points, newFoundWords.length)
     }
-  }, [puzzle, currentInput, foundWords, score, showMessage, finishGame])
+  }, [puzzle, currentInput, foundWords, score, showMessage, finishGame, triggerFeedback, triggerScoreBump])
 
   const endGame = useCallback(() => {
     if (!puzzle) return
@@ -182,6 +225,8 @@ export function useGame() {
     message,
     gameComplete,
     finished,
+    inputFeedback,
+    scoreBump,
     addLetter,
     removeLetter,
     clearInput,
