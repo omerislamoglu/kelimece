@@ -21,8 +21,8 @@ export default function Toast({ message }: ToastProps) {
 
   if (!current) return null
 
-  const isPangram =
-    current.type === 'success' && current.text.startsWith('Pangram')
+  const isTamKelime =
+    current.type === 'success' && current.text.startsWith('Tam Kelime')
 
   return (
     <div
@@ -35,13 +35,13 @@ export default function Toast({ message }: ToastProps) {
     >
       <div
         className={`rounded-2xl px-5 py-2.5 text-center text-sm font-bold shadow-lg ${
-          isPangram
-            ? 'bg-gradient-to-r from-honey-400 to-honey-300 text-bark-800 shadow-honey-400/40 ring-2 ring-honey-500/20'
+          isTamKelime
+            ? 'bg-gradient-to-r from-primary-600 to-accent-500 text-white shadow-primary-600/40 ring-2 ring-accent-500/20'
             : current.type === 'success'
-              ? 'bg-bark-800 text-cream-100'
+              ? 'bg-success-500 text-white'
               : current.type === 'error'
-                ? 'bg-bark-900 text-cream-200'
-                : 'bg-bark-700 text-cream-200'
+                ? 'bg-error-500 text-white'
+                : 'bg-surface-800 text-surface-100 dark:bg-surface-200 dark:text-surface-900'
         }`}
       >
         {current.text}

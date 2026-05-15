@@ -179,15 +179,14 @@ export function calculateScore(word: string, letters: string[]): number {
 }
 
 export const RANKS = [
-  { threshold: 0, label: 'Acemi' },
-  { threshold: 0.05, label: 'Başlangıç' },
-  { threshold: 0.15, label: 'Orta' },
-  { threshold: 0.25, label: 'İyi' },
-  { threshold: 0.4, label: 'Harika' },
-  { threshold: 0.6, label: 'Muhteşem' },
-  { threshold: 0.75, label: 'Üstat' },
+  { threshold: 0, label: 'Başlangıç' },
+  { threshold: 0.05, label: 'Çırak' },
+  { threshold: 0.15, label: 'Heveskar' },
+  { threshold: 0.3, label: 'İyi' },
+  { threshold: 0.45, label: 'Usta' },
+  { threshold: 0.6, label: 'Üstat' },
+  { threshold: 0.75, label: 'Uzman' },
   { threshold: 0.9, label: 'Dahi' },
-  { threshold: 1.0, label: 'Kraliçe Arı' },
 ] as const
 
 export function getRankFromScore(score: number, maxScore: number): string {

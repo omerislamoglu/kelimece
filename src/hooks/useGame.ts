@@ -128,7 +128,7 @@ export function useGame() {
     setScore((prev) => prev + points)
 
     if (isPangram) {
-      showMessage(`Pangram! +${points} puan`, 'success')
+      showMessage(`Tam Kelime! +${points} puan`, 'success')
     } else {
       showMessage(`+${points} puan`, 'success')
     }

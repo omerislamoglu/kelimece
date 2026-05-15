@@ -25,18 +25,18 @@ export default function ScoreBar({ score, maxScore }: ScoreBarProps) {
       <div className="mb-2 flex items-baseline justify-between">
         <span
           key={rank}
-          className="animate-rank-pop text-base font-bold text-honey-600"
+          className="animate-rank-pop text-base font-bold text-primary-600 dark:text-accent-400"
         >
           {rank}
         </span>
-        <span className="text-xs font-medium text-bark-600/60">
+        <span className="text-xs font-medium text-surface-400">
           {score} puan
         </span>
       </div>
 
-      <div className="relative h-1.5 w-full rounded-full bg-cream-200">
+      <div className="relative h-1.5 w-full rounded-full bg-surface-200 dark:bg-surface-800">
         <div
-          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-honey-400 to-honey-300 transition-all duration-500 ease-out"
+          className="absolute inset-y-0 left-0 rounded-full bg-gradient-to-r from-primary-600 to-accent-500 transition-all duration-500 ease-out"
           style={{ width: `${percentage}%` }}
         />
         {rankThresholds.map((r) => (
@@ -48,8 +48,8 @@ export default function ScoreBar({ score, maxScore }: ScoreBarProps) {
             <div
               className={`h-2.5 w-2.5 rounded-full border-2 transition-colors duration-300 ${
                 r.isActive
-                  ? 'border-honey-500 bg-honey-400'
-                  : 'border-cream-300 bg-cream-100'
+                  ? 'border-primary-600 bg-accent-500 dark:border-accent-400 dark:bg-accent-500'
+                  : 'border-surface-300 bg-surface-100 dark:border-surface-700 dark:bg-surface-900'
               }`}
             />
           </div>
