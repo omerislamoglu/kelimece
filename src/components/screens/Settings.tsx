@@ -172,13 +172,24 @@ export default function Settings({
           </div>
         </div>
 
-        {/* Tutorial */}
-        <button
-          onClick={handleTutorial}
-          className="mb-5 w-full rounded-xl bg-surface-100 px-4 py-3 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
-        >
-          Nasil oynanir? — Tekrar goster
-        </button>
+        {/* Linkler */}
+        <div className="mb-5 space-y-2">
+          <button
+            onClick={handleTutorial}
+            className="w-full rounded-xl bg-surface-100 px-4 py-3 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+          >
+            Nasil oynanir?
+          </button>
+          <button
+            onClick={() => {
+              handleClose()
+              setTimeout(onShowStats, 250)
+            }}
+            className="w-full rounded-xl bg-surface-100 px-4 py-3 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+          >
+            Istatistikler
+          </button>
+        </div>
 
         {/* Alt bilgi */}
         <div className="border-t border-surface-200 pt-4 text-center dark:border-surface-800">

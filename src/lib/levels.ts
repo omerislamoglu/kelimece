@@ -14,6 +14,7 @@ export interface LevelProgress {
   currentLevel: number
   completedLevels: number[]
   totalStars: number
+  levelStars: Record<number, number>
 }
 
 const STORAGE_KEY = 'kelimece-levels'
@@ -24,12 +25,16 @@ export function generateLevelPuzzle(level: number): LevelPuzzle {
   const idx = Math.max(0, Math.min(level - 1, LEVEL_DATA.length - 1))
   const data = LEVEL_DATA[idx]
 
+  // Center letter always first in the array
+  const others = data.letters.filter((l) => l !== data.center)
+  const orderedLetters = [data.center, ...others]
+
   const validWords = findAllValidWords(data.letters, data.center)
   const pangrams = findPangrams(validWords, data.letters)
 
   return {
     level,
-    letters: data.letters,
+    letters: orderedLetters,
     centerLetter: data.center,
     validWords,
     pangrams,
@@ -53,10 +58,22 @@ export function calculateStars(
 export function loadProgress(): LevelProgress {
   try {
     const raw = localStorage.getItem(STORAGE_KEY)
-    if (!raw) return { currentLevel: 1, completedLevels: [], totalStars: 0 }
-    return JSON.parse(raw)
+    if (!raw)
+      return {
+        currentLevel: 1,
+        completedLevels: [],
+        totalStars: 0,
+        levelStars: {},
+      }
+    const parsed = JSON.parse(raw)
+    return { levelStars: {}, ...parsed }
   } catch {
-    return { currentLevel: 1, completedLevels: [], totalStars: 0 }
+    return {
+      currentLevel: 1,
+      completedLevels: [],
+      totalStars: 0,
+      levelStars: {},
+    }
   }
 }
 

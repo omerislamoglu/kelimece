@@ -36,9 +36,9 @@ export default memo(function FoundWords({
         aria-expanded={isOpen}
         aria-label={`Bulunan kelimeler: ${foundWords.length} / ${totalWords}`}
         className="flex w-full items-center justify-between rounded-2xl
-                   border border-surface-200 bg-white/80 px-4 py-3
+                   border border-surface-200 bg-primary-50/60 px-4 py-3
                    text-left backdrop-blur-sm transition-all duration-200
-                   hover:bg-white hover:shadow-sm
+                   hover:bg-primary-50 hover:shadow-sm
                    dark:border-surface-700 dark:bg-surface-800/80
                    dark:hover:bg-surface-800"
       >

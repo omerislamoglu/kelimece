@@ -1,8 +1,8 @@
-import { useState } from 'react'
+import { useState, useMemo } from 'react'
 
 interface LetterGridProps {
   letters: string[]
-  centerLetter: string
+  currentInput: string
   onLetterClick: (letter: string) => void
 }
 
@@ -11,17 +11,20 @@ const ANGLES = [0, 60, 120, 180, 240, 300]
 function LetterButton({
   letter,
   isCenter,
+  disabled,
   onClick,
   style,
 }: {
   letter: string
   isCenter: boolean
+  disabled: boolean
   onClick: () => void
   style?: React.CSSProperties
 }) {
   const [pressed, setPressed] = useState(false)
 
   function handleClick() {
+    if (disabled) return
     setPressed(true)
     onClick()
     setTimeout(() => setPressed(false), 150)
@@ -31,16 +34,18 @@ function LetterButton({
     <button
       type="button"
       onClick={handleClick}
+      disabled={disabled}
       aria-label={`Harf ${letter.toUpperCase()}${isCenter ? ' (merkez)' : ''}`}
       className={`
-        absolute flex items-center justify-center rounded-full
-        font-bold uppercase select-none cursor-pointer
+        absolute flex items-center justify-center rounded-2xl
+        font-extrabold uppercase select-none
         transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none
         ${pressed ? 'scale-90' : 'scale-100'}
+        ${disabled ? 'opacity-25 cursor-default' : 'cursor-pointer active:scale-90'}
         ${
           isCenter
-            ? 'w-20 h-20 text-2xl bg-primary-600 text-white shadow-lg shadow-primary-600/30 hover:bg-primary-700 dark:bg-accent-500 dark:hover:bg-accent-400 dark:shadow-accent-500/30'
-            : 'w-16 h-16 text-xl bg-white text-surface-800 shadow-md shadow-surface-200/60 hover:bg-surface-100 dark:bg-surface-800 dark:text-surface-100 dark:shadow-surface-900/40 dark:hover:bg-surface-700'
+            ? 'h-[4.5rem] w-[4.5rem] text-2xl bg-gradient-to-br from-primary-500 to-primary-700 text-white shadow-xl shadow-primary-600/40 dark:from-accent-400 dark:to-accent-500 dark:text-surface-900 dark:shadow-accent-500/30'
+            : 'h-[3.75rem] w-[3.75rem] text-xl bg-primary-50 text-surface-800 shadow-lg shadow-primary-500/10 hover:shadow-xl hover:-translate-y-0.5 hover:bg-primary-100 dark:bg-surface-800 dark:text-surface-100 dark:shadow-surface-900/60 dark:hover:bg-surface-700'
         }
       `}
       style={style}
@@ -52,22 +57,45 @@ function LetterButton({
 
 export default function LetterGrid({
   letters,
-  centerLetter,
+  currentInput,
   onLetterClick,
 }: LetterGridProps) {
-  const radius = 72
+  const radius = 76
+
+  const usedCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const ch of currentInput) {
+      counts.set(ch, (counts.get(ch) ?? 0) + 1)
+    }
+    return counts
+  }, [currentInput])
+
+  const availableCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const ch of letters) {
+      counts.set(ch, (counts.get(ch) ?? 0) + 1)
+    }
+    return counts
+  }, [letters])
+
+  function isLetterDisabled(letter: string): boolean {
+    const used = usedCounts.get(letter) ?? 0
+    const available = availableCounts.get(letter) ?? 0
+    return used >= available
+  }
 
   return (
     <div
       className="relative mx-auto"
-      style={{ width: '240px', height: '240px' }}
+      style={{ width: '250px', height: '250px' }}
       role="group"
-      aria-label="Harf griди"
+      aria-label="Harf gridi"
     >
-      {/* Center letter */}
+      {/* Center letter — always the centerLetter */}
       <LetterButton
         letter={letters[0]}
-        isCenter={letters[0] === centerLetter}
+        isCenter
+        disabled={isLetterDisabled(letters[0])}
         onClick={() => onLetterClick(letters[0])}
         style={{
           left: '50%',
@@ -84,9 +112,10 @@ export default function LetterGrid({
 
         return (
           <LetterButton
-            key={letter}
+            key={`${letter}-${i}`}
             letter={letter}
-            isCenter={letter === centerLetter}
+            isCenter={false}
+            disabled={isLetterDisabled(letter)}
             onClick={() => onLetterClick(letter)}
             style={{
               left: `calc(50% + ${x}px)`,

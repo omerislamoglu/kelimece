@@ -4,8 +4,6 @@ import { playSound, vibrate } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
 import { WORD_SET } from '../lib/dictionary'
 import {
-  COIN_PER_WORD,
-  COIN_PER_PANGRAM,
   COIN_PER_BONUS,
   HINT_COST,
   INITIAL_COINS,
@@ -191,14 +189,6 @@ export function useGame() {
       return
     }
 
-    if (!word.includes(puzzle.centerLetter)) {
-      showMessage('Merkez harf kullanilmali', 'error')
-      triggerFeedback('error')
-      playSound('error')
-      vibrate([30, 50, 30])
-      return
-    }
-
     // Already found as target word?
     if (foundWordsSet.has(word)) {
       showMessage('Bu kelimeyi zaten buldunuz', 'info')
@@ -215,32 +205,27 @@ export function useGame() {
       return
     }
 
-    // Is it a target word (in the puzzle's valid words)?
+    // Is it a target word? (must include center letter — already enforced by validWords)
     const isTargetWord = puzzle.validWords.includes(word)
 
     if (isTargetWord) {
-      // Normal target word flow
+      // Normal target word flow — puan ver ama jeton verme
       const points = calculateScore(word, puzzle.letters)
       const isPangram = puzzle.pangrams.includes(word)
-      const coinReward = isPangram ? COIN_PER_PANGRAM : COIN_PER_WORD
 
       const newFoundWords = [...foundWords, word]
       setFoundWords(newFoundWords)
       setScore((prev) => prev + points)
-      setCoins((prev) => prev + coinReward)
       triggerScoreBump()
 
       if (isPangram) {
-        showMessage(
-          `Tam Kelime! +${points} puan, +${coinReward} jeton`,
-          'success',
-        )
+        showMessage(`Tam Kelime! +${points} puan`, 'success')
         triggerFeedback('pangram')
         playSound('pangram')
         vibrate([50, 30, 50, 30, 80])
         firePangramConfetti()
       } else {
-        showMessage(`+${points} puan, +${coinReward} jeton`, 'success')
+        showMessage(`+${points} puan`, 'success')
         triggerFeedback('success')
         playSound('success')
         vibrate(20)
@@ -254,12 +239,18 @@ export function useGame() {
             puzzle.targetWordCount,
             puzzle.validWords.length,
           )
+          const prevStars = progress.levelStars[puzzle.level] ?? 0
+          const extraStars = Math.max(0, stars - prevStars)
           const newProgress: LevelProgress = {
             currentLevel: progress.currentLevel,
             completedLevels: progress.completedLevels.includes(puzzle.level)
               ? progress.completedLevels
               : [...progress.completedLevels, puzzle.level],
-            totalStars: progress.totalStars + stars,
+            totalStars: progress.totalStars + extraStars,
+            levelStars: {
+              ...progress.levelStars,
+              [puzzle.level]: Math.max(stars, prevStars),
+            },
           }
           setProgress(newProgress)
           saveProgress(newProgress)
@@ -337,12 +328,18 @@ export function useGame() {
           puzzle.targetWordCount,
           puzzle.validWords.length,
         )
+        const prevStars = progress.levelStars[puzzle.level] ?? 0
+        const extraStars = Math.max(0, stars - prevStars)
         const newProgress: LevelProgress = {
           currentLevel: progress.currentLevel,
           completedLevels: progress.completedLevels.includes(puzzle.level)
             ? progress.completedLevels
             : [...progress.completedLevels, puzzle.level],
-          totalStars: progress.totalStars + stars,
+          totalStars: progress.totalStars + extraStars,
+          levelStars: {
+            ...progress.levelStars,
+            [puzzle.level]: Math.max(stars, prevStars),
+          },
         }
         setProgress(newProgress)
         saveProgress(newProgress)
@@ -384,6 +381,17 @@ export function useGame() {
     clearLevelState()
   }, [progress])
 
+  const goToLevel = useCallback((level: number) => {
+    const newPuzzle = generateLevelPuzzle(level)
+    const saved = loadLevelState(level)
+    setPuzzle(newPuzzle)
+    setFoundWords(saved?.foundWords ?? [])
+    setBonusWords(saved?.bonusWords ?? [])
+    setScore(saved?.score ?? 0)
+    setCurrentInput('')
+    setLevelComplete(false)
+  }, [])
+
   const maxScore = useMemo(() => {
     return puzzle.validWords.reduce(
       (sum, w) => sum + calculateScore(w, puzzle.letters),
@@ -412,6 +420,7 @@ export function useGame() {
     submitWord,
     useHint,
     addCoins,
+    goToLevel,
     showMessage,
     nextLevel,
     setLevelComplete,

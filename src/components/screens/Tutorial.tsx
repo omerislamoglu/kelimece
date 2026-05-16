@@ -61,7 +61,7 @@ function MiniGrid() {
             className={`absolute flex h-10 w-10 items-center justify-center rounded-full text-sm font-bold transition-all duration-200 ${
               isHit
                 ? 'scale-110 bg-primary-600 text-white shadow-lg dark:bg-accent-500'
-                : 'bg-white text-surface-700 shadow-md dark:bg-surface-800 dark:text-surface-200'
+                : 'bg-primary-50 text-surface-700 shadow-md dark:bg-surface-800 dark:text-surface-200'
             }`}
             style={{
               left: `calc(50% + ${x}px)`,

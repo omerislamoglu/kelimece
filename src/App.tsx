@@ -1,12 +1,5 @@
 import { useState, lazy, Suspense } from 'react'
-import {
-  BarChart3,
-  Coins,
-  HelpCircle,
-  Lightbulb,
-  Settings as SettingsIcon,
-  Star,
-} from 'lucide-react'
+import { Coins, Lightbulb, Settings as SettingsIcon, Star } from 'lucide-react'
 import { useGame } from './hooks/useGame'
 import { useTheme } from './hooks/useTheme'
 import LetterGrid from './components/game/LetterGrid'
@@ -24,6 +17,7 @@ const StatsPanel = lazy(() => import('./components/screens/StatsPanel'))
 const Settings = lazy(() => import('./components/screens/Settings'))
 const Tutorial = lazy(() => import('./components/screens/Tutorial'))
 const CoinShop = lazy(() => import('./components/screens/CoinShop'))
+const LevelMap = lazy(() => import('./components/screens/LevelMap'))
 
 function App() {
   const {
@@ -45,6 +39,7 @@ function App() {
     submitWord,
     useHint,
     addCoins,
+    goToLevel,
     nextLevel,
     setLevelComplete,
   } = useGame()
@@ -56,6 +51,7 @@ function App() {
   const [showSettings, setShowSettings] = useState(false)
   const [showHints, setShowHints] = useState(false)
   const [showShop, setShowShop] = useState(false)
+  const [showMap, setShowMap] = useState(false)
 
   function handleShowTutorial() {
     resetTutorial()
@@ -84,9 +80,12 @@ function App() {
             <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-100">
               Kelimece
             </h1>
-            <span className="rounded-lg bg-primary-100 px-2 py-0.5 text-xs font-bold text-primary-700 dark:bg-accent-500/20 dark:text-accent-400">
+            <button
+              onClick={() => setShowMap(true)}
+              className="rounded-lg bg-primary-100 px-2 py-0.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-600/20 dark:bg-accent-500/20 dark:text-accent-400 dark:hover:bg-accent-500/30"
+            >
               Bolum {puzzle.level}
-            </span>
+            </button>
           </div>
           <div className="flex items-center gap-2">
             {/* Jeton */}
@@ -161,7 +160,7 @@ function App() {
 
       {/* Ipucu paneli */}
       {showHints && (
-        <div className="animate-fade-in mx-5 mb-2 rounded-2xl border border-surface-200 bg-white/80 p-4 backdrop-blur-sm dark:border-surface-700 dark:bg-surface-800/80">
+        <div className="animate-fade-in mx-5 mb-2 rounded-2xl border border-surface-200 bg-primary-50/80 p-4 backdrop-blur-sm dark:border-surface-700 dark:bg-surface-800/80">
           <h3 className="mb-3 text-center text-sm font-semibold text-surface-700 dark:text-surface-300">
             Ipuclari
           </h3>
@@ -205,12 +204,13 @@ function App() {
 
         <LetterGrid
           letters={puzzle.letters}
-          centerLetter={puzzle.centerLetter}
+          currentInput={currentInput}
           onLetterClick={addLetter}
         />
 
         <Controls
           letters={puzzle.letters}
+          currentInput={currentInput}
           onLetterClick={addLetter}
           onDelete={removeLetter}
           onClear={clearInput}
@@ -238,6 +238,7 @@ function App() {
             theme={theme}
             onThemeChange={setTheme}
             onShowTutorial={handleShowTutorial}
+            onShowStats={() => setShowStats(true)}
             onClose={() => setShowSettings(false)}
           />
         )}
@@ -249,6 +250,15 @@ function App() {
             coins={coins}
             onPurchase={addCoins}
             onClose={() => setShowShop(false)}
+          />
+        )}
+
+        {showMap && (
+          <LevelMap
+            progress={progress}
+            currentLevel={puzzle.level}
+            onSelectLevel={goToLevel}
+            onClose={() => setShowMap(false)}
           />
         )}
       </Suspense>

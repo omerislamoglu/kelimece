@@ -105,7 +105,7 @@ export default function CoinShop({
                     ? 'border-yellow-400 bg-yellow-500/5 hover:bg-yellow-500/10 dark:border-yellow-500/50'
                     : isPopular
                       ? 'border-primary-300 bg-primary-500/5 hover:bg-primary-500/10 dark:border-accent-500/50'
-                      : 'border-surface-200 bg-white hover:bg-surface-50 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/80'
+                      : 'border-surface-200 bg-primary-50 hover:bg-primary-100 dark:border-surface-700 dark:bg-surface-800 dark:hover:bg-surface-800/80'
                 }`}
               >
                 {/* Badge */}

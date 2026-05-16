@@ -1,8 +1,9 @@
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { Delete, Shuffle, Send } from 'lucide-react'
 
 interface ControlsProps {
   letters: string[]
+  currentInput: string
   onLetterClick: (letter: string) => void
   onDelete: () => void
   onClear: () => void
@@ -12,15 +13,30 @@ interface ControlsProps {
 
 export default function Controls({
   letters,
+  currentInput,
   onLetterClick,
   onDelete,
   onClear,
   onShuffle,
   onSubmit,
 }: ControlsProps) {
-  useEffect(() => {
-    const letterSet = new Set(letters)
+  const availableCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const ch of letters) {
+      counts.set(ch, (counts.get(ch) ?? 0) + 1)
+    }
+    return counts
+  }, [letters])
 
+  const usedCounts = useMemo(() => {
+    const counts = new Map<string, number>()
+    for (const ch of currentInput) {
+      counts.set(ch, (counts.get(ch) ?? 0) + 1)
+    }
+    return counts
+  }, [currentInput])
+
+  useEffect(() => {
     function handleKeyDown(e: KeyboardEvent) {
       if (e.ctrlKey || e.metaKey || e.altKey) return
 
@@ -49,7 +65,9 @@ export default function Controls({
       }
 
       const key = e.key.toLowerCase()
-      if (letterSet.has(key)) {
+      const available = availableCounts.get(key) ?? 0
+      const used = usedCounts.get(key) ?? 0
+      if (available > 0 && used < available) {
         e.preventDefault()
         onLetterClick(key)
       }
@@ -57,11 +75,19 @@ export default function Controls({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [letters, onLetterClick, onDelete, onClear, onShuffle, onSubmit])
+  }, [
+    availableCounts,
+    usedCounts,
+    onLetterClick,
+    onDelete,
+    onClear,
+    onShuffle,
+    onSubmit,
+  ])
 
   return (
     <div
-      className="flex items-center justify-center gap-4"
+      className="flex items-center justify-center gap-3"
       role="toolbar"
       aria-label="Oyun kontrolleri"
     >
@@ -69,12 +95,11 @@ export default function Controls({
         type="button"
         onClick={onDelete}
         aria-label="Son harfi sil"
-        className="flex items-center gap-2 rounded-full border-2 border-surface-200 bg-white px-5 py-3 text-sm
-                   font-semibold text-surface-700 transition-all duration-150
-                   hover:border-primary-500 hover:text-primary-600 active:scale-95
+        className="flex items-center gap-1.5 rounded-2xl bg-surface-100 px-5 py-3 text-sm
+                   font-semibold text-surface-600 transition-all duration-150
+                   hover:bg-surface-200 active:scale-95
                    focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none
-                   dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300
-                   dark:hover:border-accent-500 dark:hover:text-accent-400"
+                   dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
       >
         <Delete className="h-4 w-4" />
         Sil
@@ -83,12 +108,11 @@ export default function Controls({
         type="button"
         onClick={onShuffle}
         aria-label="Harfleri karistir"
-        className="rounded-full border-2 border-surface-200 bg-white p-3 text-surface-700
-                   transition-all duration-150 hover:border-primary-500
-                   hover:text-primary-600 active:rotate-180 active:scale-95
+        className="rounded-2xl bg-surface-100 p-3 text-surface-600
+                   transition-all duration-150 hover:bg-surface-200
+                   active:rotate-180 active:scale-95
                    focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none
-                   dark:border-surface-700 dark:bg-surface-800 dark:text-surface-300
-                   dark:hover:border-accent-500 dark:hover:text-accent-400"
+                   dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
       >
         <Shuffle className="h-5 w-5" />
       </button>
@@ -96,12 +120,11 @@ export default function Controls({
         type="button"
         onClick={onSubmit}
         aria-label="Kelimeyi gonder"
-        className="flex items-center gap-2 rounded-full bg-primary-600 px-5 py-3 text-sm font-bold
-                   text-white shadow-md shadow-primary-600/30
-                   transition-all duration-150 hover:bg-primary-700
-                   hover:shadow-lg hover:shadow-primary-600/40 active:scale-95
+        className="flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-primary-600 to-primary-500 px-5 py-3 text-sm font-bold
+                   text-white shadow-lg shadow-primary-600/25
+                   transition-all duration-150 hover:shadow-xl hover:shadow-primary-600/30 active:scale-95
                    focus-visible:ring-2 focus-visible:ring-white focus-visible:outline-none
-                   dark:bg-accent-500 dark:shadow-accent-500/30 dark:hover:bg-accent-400"
+                   dark:from-accent-500 dark:to-accent-400 dark:text-surface-900 dark:shadow-accent-500/25"
       >
         <Send className="h-4 w-4" />
         Gonder
