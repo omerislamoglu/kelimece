@@ -1,9 +1,9 @@
 import { useEffect, useState, useCallback } from 'react'
 import { X } from 'lucide-react'
-import type { Puzzle } from '../types'
-import { getRankFromScore } from '../lib/puzzle'
-import { getTimeUntilNextPuzzle } from '../lib/countdown'
-import ShareButton from './ShareButton'
+import type { Puzzle } from '../../types'
+import { getRankFromScore } from '../../lib/puzzle'
+import { getTimeUntilNextPuzzle } from '../../lib/countdown'
+import ShareButton from '../ShareButton'
 
 interface GameCompleteProps {
   puzzle: Puzzle
@@ -79,9 +79,7 @@ export default function GameComplete({
     >
       <div
         className={`relative w-full max-w-sm rounded-2xl bg-surface-50 p-6 shadow-2xl transition-all duration-200 dark:bg-surface-900 ${
-          visible
-            ? 'scale-100 opacity-100'
-            : 'scale-95 opacity-0'
+          visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
       >
         {/* Kapat butonu */}
@@ -119,9 +117,7 @@ export default function GameComplete({
             <div className="text-2xl font-bold text-primary-600 dark:text-accent-400">
               {foundWords.length}/{puzzle.validWords.length}
             </div>
-            <div className="text-xs font-medium text-surface-400">
-              Kelime
-            </div>
+            <div className="text-xs font-medium text-surface-400">Kelime</div>
           </div>
         </div>
 
@@ -154,7 +150,8 @@ export default function GameComplete({
             Yarinki bulmaca:
           </div>
           <div className="mt-0.5 font-mono text-lg font-bold text-surface-700 dark:text-surface-300">
-            {pad(countdown.hours)}:{pad(countdown.minutes)}:{pad(countdown.seconds)}
+            {pad(countdown.hours)}:{pad(countdown.minutes)}:
+            {pad(countdown.seconds)}
           </div>
         </div>
 

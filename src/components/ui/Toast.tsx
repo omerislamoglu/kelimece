@@ -7,17 +7,23 @@ interface ToastProps {
 export default function Toast({ message }: ToastProps) {
   const [visible, setVisible] = useState(false)
   const [current, setCurrent] = useState(message)
+  const [prevMessage, setPrevMessage] = useState(message)
 
-  useEffect(() => {
+  // Adjust state during render when prop changes (React-recommended pattern)
+  if (message !== prevMessage) {
+    setPrevMessage(message)
     if (message) {
       setCurrent(message)
       setVisible(true)
-      const timer = setTimeout(() => setVisible(false), 1700)
-      return () => clearTimeout(timer)
-    } else {
-      setVisible(false)
     }
-  }, [message])
+  }
+
+  // Auto-hide after delay
+  useEffect(() => {
+    if (!visible) return
+    const timer = setTimeout(() => setVisible(false), 1700)
+    return () => clearTimeout(timer)
+  }, [visible])
 
   if (!current) return null
 
@@ -26,7 +32,10 @@ export default function Toast({ message }: ToastProps) {
 
   return (
     <div
-      className={`pointer-events-none fixed left-1/2 top-12 z-[60] -translate-x-1/2
+      role="status"
+      aria-live="polite"
+      className={`pointer-events-none fixed left-1/2 z-[60] -translate-x-1/2
+        top-[calc(0.75rem+var(--safe-area-top))]
         transition-all duration-300 ease-out ${
           visible
             ? 'translate-y-0 scale-100 opacity-100'

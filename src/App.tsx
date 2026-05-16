@@ -1,24 +1,41 @@
-import { useState, useEffect } from 'react'
-import { BarChart3, Flag, HelpCircle, Settings as SettingsIcon } from 'lucide-react'
+import { useState, lazy, Suspense } from 'react'
+import {
+  BarChart3,
+  Flag,
+  HelpCircle,
+  Settings as SettingsIcon,
+} from 'lucide-react'
 import { useGame } from './hooks/useGame'
 import { useTheme } from './hooks/useTheme'
-import LetterGrid from './components/LetterGrid'
-import InputDisplay from './components/InputDisplay'
-import Controls from './components/Controls'
-import ScoreBar from './components/ScoreBar'
-import FoundWords from './components/FoundWords'
-import Toast from './components/Toast'
+import LetterGrid from './components/game/LetterGrid'
+import InputDisplay from './components/game/InputDisplay'
+import Controls from './components/game/Controls'
+import ScoreBar from './components/game/ScoreBar'
+import FoundWords from './components/game/FoundWords'
+import Toast from './components/ui/Toast'
 import ShareButton from './components/ShareButton'
-import GameComplete from './components/GameComplete'
-import StatsPanel from './components/StatsPanel'
-import Settings from './components/Settings'
-import Skeleton from './components/Skeleton'
-import Tutorial, { isTutorialCompleted, resetTutorial } from './components/Tutorial'
+import Skeleton from './components/ui/Skeleton'
+import { isTutorialCompleted, resetTutorial } from './lib/tutorial'
+
+const GameComplete = lazy(() => import('./components/screens/GameComplete'))
+const StatsPanel = lazy(() => import('./components/screens/StatsPanel'))
+const Settings = lazy(() => import('./components/screens/Settings'))
+const Tutorial = lazy(() => import('./components/screens/Tutorial'))
 
 function formatTurkishDate(dateStr: string): string {
   const months = [
-    'Ocak', 'Subat', 'Mart', 'Nisan', 'Mayis', 'Haziran',
-    'Temmuz', 'Agustos', 'Eylul', 'Ekim', 'Kasim', 'Aralik',
+    'Ocak',
+    'Subat',
+    'Mart',
+    'Nisan',
+    'Mayis',
+    'Haziran',
+    'Temmuz',
+    'Agustos',
+    'Eylul',
+    'Ekim',
+    'Kasim',
+    'Aralik',
   ]
   const [y, m, d] = dateStr.split('-').map(Number)
   return `${d} ${months[m - 1]} ${y}`
@@ -38,6 +55,7 @@ function App() {
     scoreBump,
     addLetter,
     removeLetter,
+    clearInput,
     shuffleLetters,
     submitWord,
     showMessage,
@@ -48,14 +66,8 @@ function App() {
   const { theme, setTheme } = useTheme()
 
   const [showStats, setShowStats] = useState(false)
-  const [showTutorial, setShowTutorial] = useState(false)
+  const [showTutorial, setShowTutorial] = useState(() => !isTutorialCompleted())
   const [showSettings, setShowSettings] = useState(false)
-
-  useEffect(() => {
-    if (!isTutorialCompleted()) {
-      setShowTutorial(true)
-    }
-  }, [])
 
   function handleShowTutorial() {
     resetTutorial()
@@ -65,7 +77,13 @@ function App() {
   if (!puzzle) return <Skeleton />
 
   return (
-    <div className="mx-auto flex min-h-[100dvh] max-w-lg flex-col bg-surface-50 dark:bg-surface-950 sm:my-4 sm:min-h-0 sm:rounded-3xl sm:shadow-xl sm:shadow-surface-900/5 dark:sm:shadow-black/20">
+    <div
+      className="mx-auto flex min-h-[100dvh] max-w-lg flex-col bg-surface-50 dark:bg-surface-950 sm:my-4 sm:min-h-0 sm:rounded-3xl sm:shadow-xl sm:shadow-surface-900/5 dark:sm:shadow-black/20"
+      style={{
+        paddingTop: 'var(--safe-area-top)',
+        paddingBottom: 'var(--safe-area-bottom)',
+      }}
+    >
       <Toast message={message} />
 
       {/* Header */}
@@ -138,6 +156,7 @@ function App() {
           letters={puzzle.letters}
           onLetterClick={addLetter}
           onDelete={removeLetter}
+          onClear={clearInput}
           onShuffle={shuffleLetters}
           onSubmit={submitWord}
         />
@@ -166,29 +185,31 @@ function App() {
       </main>
 
       {/* Modallar */}
-      {gameComplete && (
-        <GameComplete
-          puzzle={puzzle}
-          foundWords={foundWords}
-          score={score}
-          maxScore={maxScore}
-          onClose={() => setGameComplete(false)}
-          onMessage={showMessage}
-        />
-      )}
+      <Suspense fallback={null}>
+        {gameComplete && (
+          <GameComplete
+            puzzle={puzzle}
+            foundWords={foundWords}
+            score={score}
+            maxScore={maxScore}
+            onClose={() => setGameComplete(false)}
+            onMessage={showMessage}
+          />
+        )}
 
-      {showStats && <StatsPanel onClose={() => setShowStats(false)} />}
+        {showStats && <StatsPanel onClose={() => setShowStats(false)} />}
 
-      {showSettings && (
-        <Settings
-          theme={theme}
-          onThemeChange={setTheme}
-          onShowTutorial={handleShowTutorial}
-          onClose={() => setShowSettings(false)}
-        />
-      )}
+        {showSettings && (
+          <Settings
+            theme={theme}
+            onThemeChange={setTheme}
+            onShowTutorial={handleShowTutorial}
+            onClose={() => setShowSettings(false)}
+          />
+        )}
 
-      {showTutorial && <Tutorial onComplete={() => setShowTutorial(false)} />}
+        {showTutorial && <Tutorial onComplete={() => setShowTutorial(false)} />}
+      </Suspense>
     </div>
   )
 }

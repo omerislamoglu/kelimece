@@ -1,18 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import { X } from 'lucide-react'
-import { getStats, type GameStats } from '../lib/stats'
+import { getStats, type GameStats } from '../../lib/stats'
 
 interface StatsPanelProps {
   onClose: () => void
 }
 
-function StatCard({
-  value,
-  label,
-}: {
-  value: string | number
-  label: string
-}) {
+function StatCard({ value, label }: { value: string | number; label: string }) {
   return (
     <div className="rounded-xl bg-surface-100 p-3 text-center dark:bg-surface-800">
       <div className="text-xl font-bold text-primary-600 dark:text-accent-400">
@@ -26,11 +20,10 @@ function StatCard({
 }
 
 export default function StatsPanel({ onClose }: StatsPanelProps) {
-  const [stats, setStats] = useState<GameStats | null>(null)
+  const [stats] = useState<GameStats | null>(() => getStats())
   const [visible, setVisible] = useState(false)
 
   useEffect(() => {
-    setStats(getStats())
     requestAnimationFrame(() => setVisible(true))
   }, [])
 

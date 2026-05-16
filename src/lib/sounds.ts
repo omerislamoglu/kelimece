@@ -33,10 +33,17 @@ export function vibrate(pattern: number | number[] = 10) {
 
 type SoundType = 'success' | 'error' | 'pangram' | 'click'
 
-const SOUNDS: Record<SoundType, { freq: number; duration: number; type: OscillatorType; gain: number; ramp?: number }[]> = {
-  click: [
-    { freq: 600, duration: 0.04, type: 'sine', gain: 0.08 },
-  ],
+const SOUNDS: Record<
+  SoundType,
+  {
+    freq: number
+    duration: number
+    type: OscillatorType
+    gain: number
+    ramp?: number
+  }[]
+> = {
+  click: [{ freq: 600, duration: 0.04, type: 'sine', gain: 0.08 }],
   success: [
     { freq: 523, duration: 0.1, type: 'sine', gain: 0.12 },
     { freq: 659, duration: 0.1, type: 'sine', gain: 0.12 },
@@ -73,7 +80,10 @@ export function playSound(type: SoundType) {
       osc.type = note.type
       osc.frequency.value = note.freq
       gain.gain.setValueAtTime(note.gain, ctx.currentTime + offset)
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + offset + note.duration)
+      gain.gain.exponentialRampToValueAtTime(
+        0.001,
+        ctx.currentTime + offset + note.duration,
+      )
 
       osc.connect(gain)
       gain.connect(ctx.destination)

@@ -1,4 +1,5 @@
-import type { InputFeedback } from '../hooks/useGame'
+import { memo } from 'react'
+import type { InputFeedback } from '../../hooks/useGame'
 
 interface InputDisplayProps {
   currentInput: string
@@ -6,7 +7,7 @@ interface InputDisplayProps {
   feedback?: InputFeedback
 }
 
-export default function InputDisplay({
+export default memo(function InputDisplay({
   currentInput,
   centerLetter,
   feedback,
@@ -25,7 +26,9 @@ export default function InputDisplay({
       className={`flex min-h-[3.5rem] items-center justify-center rounded-xl border-b-2 border-surface-200 px-2 pb-1 dark:border-surface-700 ${feedbackClass}`}
       role="status"
       aria-live="polite"
-      aria-label={currentInput ? `Girilen harfler: ${currentInput}` : 'Harf giriniz'}
+      aria-label={
+        currentInput ? `Girilen harfler: ${currentInput}` : 'Harf giriniz'
+      }
     >
       {currentInput.length === 0 ? (
         <span className="inline-block h-8 w-[2px] animate-blink bg-primary-600 dark:bg-accent-500" />
@@ -48,4 +51,4 @@ export default function InputDisplay({
       )}
     </div>
   )
-}
+})

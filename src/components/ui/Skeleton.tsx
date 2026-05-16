@@ -25,7 +25,11 @@ export default function Skeleton() {
         <div className="relative" style={{ width: '240px', height: '240px' }}>
           <div
             className="absolute h-20 w-20 rounded-full bg-surface-200 dark:bg-surface-800"
-            style={{ left: '50%', top: '50%', transform: 'translate(-50%, -50%)' }}
+            style={{
+              left: '50%',
+              top: '50%',
+              transform: 'translate(-50%, -50%)',
+            }}
           />
           {[0, 60, 120, 180, 240, 300].map((angle) => {
             const rad = (angle - 90) * (Math.PI / 180)

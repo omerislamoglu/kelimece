@@ -1,5 +1,13 @@
 import { WORDS } from '../data/words'
 import type { Puzzle } from '../types'
+import { findAllValidWords, findPangrams } from './dictionary'
+import {
+  MIN_WORD_LENGTH,
+  PUZZLE_LETTER_COUNT,
+  MIN_VALID_WORDS,
+  PANGRAM_BONUS,
+  RANKS,
+} from './constants'
 
 function seededRandom(seed: number): () => number {
   let state = seed
@@ -38,49 +46,31 @@ function shuffle<T>(arr: T[], random: () => number): T[] {
   return copy
 }
 
-function findValidWords(
-  letters: Set<string>,
-  centerLetter: string,
-): string[] {
-  return WORDS.filter((word) => {
-    if (word.length < 4) return false
-    if (!word.includes(centerLetter)) return false
-    return [...word].every((ch) => letters.has(ch))
-  })
-}
-
-function findPangrams(words: string[], letters: Set<string>): string[] {
-  return words.filter((word) => {
-    const wordLetters = new Set(word)
-    return [...letters].every((l) => wordLetters.has(l))
-  })
-}
-
 /**
  * Puzzle adayı üretir: bir kelime seçer, harflerini 7'ye tamamlar,
  * merkez harf belirler ve geçerli kelimeleri bulur.
- *
- * Kelime listesi küçükken (prototip) 5-6 benzersiz harfli kelimelerden
- * de puzzle üretebilmek için, ek harfler eklenerek 7 harfe tamamlanır.
- * Ek harfler, geçerli kelime sayısını maksimize edecek şekilde seçilir.
  */
 function buildPuzzleFromWord(
   baseWord: string,
   random: () => number,
-): { letters: string[]; centerLetter: string; validWords: string[]; pangrams: string[] } | null {
+): {
+  letters: string[]
+  centerLetter: string
+  validWords: string[]
+  pangrams: string[]
+} | null {
   const baseLetters = getUniqueLetters(baseWord)
 
   let puzzleLetters: Set<string>
 
-  if (baseLetters.length >= 7) {
-    // Zaten 7+ benzersiz harf var — ilk 7'yi al
-    puzzleLetters = new Set(baseLetters.slice(0, 7))
+  if (baseLetters.length >= PUZZLE_LETTER_COUNT) {
+    puzzleLetters = new Set(baseLetters.slice(0, PUZZLE_LETTER_COUNT))
   } else {
     // 7'ye tamamla: kelime havuzundaki harfleri dene, en çok kelime üreten ekleri seç
     puzzleLetters = new Set(baseLetters)
     const allLetters = new Set(WORDS.join(''))
 
-    while (puzzleLetters.size < 7) {
+    while (puzzleLetters.size < PUZZLE_LETTER_COUNT) {
       let bestLetter = ''
       let bestCount = -1
 
@@ -88,7 +78,8 @@ function buildPuzzleFromWord(
         if (puzzleLetters.has(candidate)) continue
         const trial = new Set([...puzzleLetters, candidate])
         const count = WORDS.filter(
-          (w) => w.length >= 4 && [...w].every((ch) => trial.has(ch)),
+          (w) =>
+            w.length >= MIN_WORD_LENGTH && [...w].every((ch) => trial.has(ch)),
         ).length
         if (count > bestCount) {
           bestCount = count
@@ -101,34 +92,41 @@ function buildPuzzleFromWord(
     }
   }
 
-  if (puzzleLetters.size < 7) return null
+  if (puzzleLetters.size < PUZZLE_LETTER_COUNT) return null
 
   const lettersArr = [...puzzleLetters]
 
-  // Merkez harf: en çok geçerli kelimede geçen harf
-  // (eşitlik durumunda random seçim)
-  const letterFreq = lettersArr.map((letter) => ({
-    letter,
-    count: WORDS.filter(
-      (w) =>
-        w.length >= 4 &&
-        w.includes(letter) &&
-        [...w].every((ch) => puzzleLetters.has(ch)),
-    ).length,
-  }))
-  letterFreq.sort((a, b) => b.count - a.count)
+  // Her harf için: kaç kelime üretir ve kaç pangram verir
+  const letterStats = lettersArr.map((letter) => {
+    const words = findAllValidWords(puzzleLetters, letter)
+    const pgs = findPangrams(words, puzzleLetters)
+    return { letter, wordCount: words.length, pangramCount: pgs.length }
+  })
 
-  // En yüksek frekanslı harflerden birini seç
-  const maxCount = letterFreq[0].count
-  const topLetters = letterFreq.filter((l) => l.count === maxCount)
+  // Önce pangram veren ve MIN_VALID_WORDS'ü karşılayan harfleri tercih et
+  const withPangrams = letterStats.filter(
+    (l) => l.pangramCount > 0 && l.wordCount >= MIN_VALID_WORDS,
+  )
+  const viable =
+    withPangrams.length > 0
+      ? withPangrams
+      : letterStats.filter((l) => l.wordCount >= MIN_VALID_WORDS)
+
+  if (viable.length === 0) return null
+
+  // En çok kelime üreten harflerden birini seç
+  viable.sort((a, b) => b.wordCount - a.wordCount)
+  const maxCount = viable[0].wordCount
+  const topLetters = viable.filter((l) => l.wordCount === maxCount)
   const centerLetter =
     topLetters[Math.floor(random() * topLetters.length)].letter
 
-  const validWords = findValidWords(puzzleLetters, centerLetter)
-  if (validWords.length < 5) return null
-
+  const validWords = findAllValidWords(puzzleLetters, centerLetter)
   const pangrams = findPangrams(validWords, puzzleLetters)
-  const shuffled = shuffle(lettersArr.filter((l) => l !== centerLetter), random)
+  const shuffled = shuffle(
+    lettersArr.filter((l) => l !== centerLetter),
+    random,
+  )
 
   return {
     letters: [centerLetter, ...shuffled],
@@ -142,52 +140,53 @@ export function generateDailyPuzzle(date: Date): Puzzle {
   const seed = dateToSeed(date)
   const random = seededRandom(seed)
 
-  // Pangram adaylarını bul ve önceliklendir (çok benzersiz harf > az)
-  const candidates = WORDS
-    .filter((w) => getUniqueLetters(w).length >= 5)
-    .sort((a, b) => getUniqueLetters(b).length - getUniqueLetters(a).length)
+  // Önce tam 7 benzersiz harfli kelimeleri dene (garantili pangram temeli)
+  const sevenLetterBases = shuffle(
+    WORDS.filter((w) => getUniqueLetters(w).length === PUZZLE_LETTER_COUNT),
+    random,
+  )
 
-  const shuffled = shuffle(candidates, random)
-
-  for (const word of shuffled) {
+  for (const word of sevenLetterBases) {
     const result = buildPuzzleFromWord(word, random)
-    if (result) {
-      return {
-        ...result,
-        date: formatDate(date),
-      }
+    if (result && result.pangrams.length > 0) {
+      return { ...result, date: formatDate(date) }
     }
   }
 
-  // Fallback — ilk kelimeden puzzle üret
-  const fallback = buildPuzzleFromWord(WORDS[0], random)!
-  return {
-    ...fallback,
-    date: formatDate(date),
+  // Fallback: tüm adayları dene (5+ benzersiz harf)
+  const allCandidates = shuffle(
+    WORDS.filter(
+      (w) =>
+        getUniqueLetters(w).length >= 5 &&
+        getUniqueLetters(w).length < PUZZLE_LETTER_COUNT,
+    ),
+    random,
+  )
+
+  for (const word of allCandidates) {
+    const result = buildPuzzleFromWord(word, random)
+    if (result) {
+      return { ...result, date: formatDate(date) }
+    }
   }
+
+  // Son çare
+  const fallback = buildPuzzleFromWord(WORDS[0], random)!
+  return { ...fallback, date: formatDate(date) }
 }
 
 export function calculateScore(word: string, letters: string[]): number {
-  if (word.length < 4) return 0
-  if (word.length === 4) return 1
+  if (word.length < MIN_WORD_LENGTH) return 0
+  if (word.length === MIN_WORD_LENGTH) return 1
 
-  const baseScore = word.length - 3
+  const baseScore = word.length - (MIN_WORD_LENGTH - 1)
   const wordLetters = new Set(word)
   const isPangram = letters.every((l) => wordLetters.has(l))
 
-  return baseScore + (isPangram ? 7 : 0)
+  return baseScore + (isPangram ? PANGRAM_BONUS : 0)
 }
 
-export const RANKS = [
-  { threshold: 0, label: 'Başlangıç' },
-  { threshold: 0.05, label: 'Çırak' },
-  { threshold: 0.15, label: 'Heveskar' },
-  { threshold: 0.3, label: 'İyi' },
-  { threshold: 0.45, label: 'Usta' },
-  { threshold: 0.6, label: 'Üstat' },
-  { threshold: 0.75, label: 'Uzman' },
-  { threshold: 0.9, label: 'Dahi' },
-] as const
+export { RANKS }
 
 export function getRankFromScore(score: number, maxScore: number): string {
   if (maxScore === 0) return RANKS[0].label

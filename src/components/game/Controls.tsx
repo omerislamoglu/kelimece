@@ -5,6 +5,7 @@ interface ControlsProps {
   letters: string[]
   onLetterClick: (letter: string) => void
   onDelete: () => void
+  onClear: () => void
   onShuffle: () => void
   onSubmit: () => void
 }
@@ -13,6 +14,7 @@ export default function Controls({
   letters,
   onLetterClick,
   onDelete,
+  onClear,
   onShuffle,
   onSubmit,
 }: ControlsProps) {
@@ -34,6 +36,12 @@ export default function Controls({
         return
       }
 
+      if (e.key === 'Escape') {
+        e.preventDefault()
+        onClear()
+        return
+      }
+
       if (e.key === ' ') {
         e.preventDefault()
         onShuffle()
@@ -49,10 +57,14 @@ export default function Controls({
 
     window.addEventListener('keydown', handleKeyDown)
     return () => window.removeEventListener('keydown', handleKeyDown)
-  }, [letters, onLetterClick, onDelete, onShuffle, onSubmit])
+  }, [letters, onLetterClick, onDelete, onClear, onShuffle, onSubmit])
 
   return (
-    <div className="flex items-center justify-center gap-4" role="toolbar" aria-label="Oyun kontrolleri">
+    <div
+      className="flex items-center justify-center gap-4"
+      role="toolbar"
+      aria-label="Oyun kontrolleri"
+    >
       <button
         type="button"
         onClick={onDelete}

@@ -9,11 +9,17 @@ export default defineConfig({
     tailwindcss(),
     VitePWA({
       registerType: 'autoUpdate',
-      includeAssets: ['favicon.svg', 'favicon-32x32.png', 'favicon-16x16.png', 'apple-touch-icon.png'],
+      includeAssets: [
+        'favicon.svg',
+        'favicon-32x32.png',
+        'favicon-16x16.png',
+        'apple-touch-icon.png',
+      ],
       manifest: {
         name: 'Kelimece — Gunluk Turkce Kelime Bulmacasi',
         short_name: 'Kelimece',
-        description: 'Her gun yeni bir bulmaca. 7 harften mumkun oldugunca cok kelime bul.',
+        description:
+          'Her gun yeni bir bulmaca. 7 harften mumkun oldugunca cok kelime bul.',
         theme_color: '#4f46e5',
         background_color: '#f8fafc',
         display: 'standalone',

@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, memo } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 
 interface FoundWordsProps {
@@ -7,7 +7,7 @@ interface FoundWordsProps {
   pangrams: string[]
 }
 
-export default function FoundWords({
+export default memo(function FoundWords({
   foundWords,
   totalWords,
   pangrams,
@@ -79,7 +79,7 @@ export default function FoundWords({
                 type="button"
                 onClick={() => setIsOpen(false)}
                 aria-label="Kelime listesini kapat"
-                className="rounded-full p-1 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-700 dark:hover:bg-surface-700 dark:hover:text-surface-300"
+                className="rounded-full p-2 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-700 dark:hover:bg-surface-700 dark:hover:text-surface-300"
               >
                 <X className="h-4 w-4" />
               </button>
@@ -115,4 +115,4 @@ export default function FoundWords({
       )}
     </>
   )
-}
+})

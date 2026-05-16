@@ -4,6 +4,7 @@ import { generateDailyPuzzle, calculateScore } from '../lib/puzzle'
 import { updateStats } from '../lib/stats'
 import { playSound, vibrate } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
+import { STORAGE_KEYS } from '../lib/constants'
 
 interface GameMessage {
   text: string
@@ -19,11 +20,9 @@ interface SavedState {
   finished: boolean
 }
 
-const STORAGE_KEY = 'kelimece-game'
-
 function loadSavedState(date: string): SavedState | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEY)
+    const raw = localStorage.getItem(STORAGE_KEYS.game)
     if (!raw) return null
     const saved: SavedState = JSON.parse(raw)
     if (saved.date !== date) return null
@@ -33,53 +32,88 @@ function loadSavedState(date: string): SavedState | null {
   }
 }
 
-function saveState(date: string, foundWords: string[], score: number, finished: boolean) {
-  const state: SavedState = { date, foundWords, score, finished }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state))
+function saveState(
+  date: string,
+  foundWords: string[],
+  score: number,
+  finished: boolean,
+) {
+  try {
+    const state: SavedState = { date, foundWords, score, finished }
+    localStorage.setItem(STORAGE_KEYS.game, JSON.stringify(state))
+  } catch {
+    // localStorage full or unavailable — silently ignore
+  }
 }
 
 export function useGame() {
-  const [puzzle, setPuzzle] = useState<Puzzle | null>(null)
-  const [foundWords, setFoundWords] = useState<string[]>([])
-  const [currentInput, setCurrentInput] = useState('')
-  const [score, setScore] = useState(0)
-  const [message, setMessage] = useState<GameMessage | null>(null)
-  const [gameComplete, setGameComplete] = useState(false)
-  const [finished, setFinished] = useState(false)
-  const [inputFeedback, setInputFeedback] = useState<InputFeedback>(null)
-  const [scoreBump, setScoreBump] = useState(false)
-  const statsRecorded = useRef(false)
-
-  // Puzzle'i olustur ve kayitli durumu yukle
-  useEffect(() => {
+  const [initialState] = useState(() => {
     const today = new Date()
     const dailyPuzzle = generateDailyPuzzle(today)
-    setPuzzle(dailyPuzzle)
-
     const saved = loadSavedState(dailyPuzzle.date)
-    if (saved) {
-      setFoundWords(saved.foundWords)
-      setScore(saved.score)
-      if (saved.finished) {
-        setFinished(true)
-        statsRecorded.current = true
-      }
+    return {
+      puzzle: dailyPuzzle,
+      foundWords: saved?.foundWords ?? [],
+      score: saved?.score ?? 0,
+      finished: saved?.finished ?? false,
+      statsRecordedInit: saved?.finished ?? false,
     }
-  }, [])
+  })
 
-  // foundWords veya score degistiginde localStorage'a kaydet
+  const [puzzle, setPuzzle] = useState<Puzzle | null>(initialState.puzzle)
+  const [foundWords, setFoundWords] = useState<string[]>(
+    initialState.foundWords,
+  )
+  const [currentInput, setCurrentInput] = useState('')
+  const [score, setScore] = useState(initialState.score)
+  const [message, setMessage] = useState<GameMessage | null>(null)
+  const [gameComplete, setGameComplete] = useState(false)
+  const [finished, setFinished] = useState(initialState.finished)
+  const [inputFeedback, setInputFeedback] = useState<InputFeedback>(null)
+  const [scoreBump, setScoreBump] = useState(false)
+  const statsRecorded = useRef(initialState.statsRecordedInit)
+  const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
+
+  const foundWordsSet = useMemo(() => new Set(foundWords), [foundWords])
+
+  // foundWords veya score degistiginde localStorage'a kaydet (debounced)
   useEffect(() => {
     if (!puzzle) return
-    saveState(puzzle.date, foundWords, score, finished)
+    clearTimeout(saveTimeoutRef.current)
+    saveTimeoutRef.current = setTimeout(() => {
+      saveState(puzzle.date, foundWords, score, finished)
+    }, 500)
+    return () => clearTimeout(saveTimeoutRef.current)
   }, [puzzle, foundWords, score, finished])
 
-  const showMessage = useCallback(
-    (text: string, type: GameMessage['type']) => {
-      setMessage({ text, type })
-      setTimeout(() => setMessage(null), 2000)
-    },
-    [],
-  )
+  // Gece yarisi puzzle yenileme
+  useEffect(() => {
+    const now = new Date()
+    const tomorrow = new Date(now)
+    tomorrow.setDate(tomorrow.getDate() + 1)
+    tomorrow.setHours(0, 0, 0, 0)
+    const msUntilMidnight = tomorrow.getTime() - now.getTime()
+
+    const timer = setTimeout(() => {
+      const newPuzzle = generateDailyPuzzle(new Date())
+      setPuzzle(newPuzzle)
+      setFoundWords([])
+      setScore(0)
+      setFinished(false)
+      setGameComplete(false)
+      setCurrentInput('')
+      statsRecorded.current = false
+    }, msUntilMidnight)
+
+    return () => clearTimeout(timer)
+  }, [puzzle?.date])
+
+  const showMessage = useCallback((text: string, type: GameMessage['type']) => {
+    setMessage({ text, type })
+    setTimeout(() => setMessage(null), 2000)
+  }, [])
 
   const triggerFeedback = useCallback((type: InputFeedback) => {
     setInputFeedback(type)
@@ -160,7 +194,7 @@ export function useGame() {
       return
     }
 
-    if (foundWords.includes(word)) {
+    if (foundWordsSet.has(word)) {
       showMessage('Bu kelimeyi zaten buldunuz', 'info')
       triggerFeedback('error')
       playSound('error')
@@ -201,7 +235,17 @@ export function useGame() {
       setTimeout(() => fireAllFoundConfetti(), 500)
       finishGame(puzzle.date, score + points, newFoundWords.length)
     }
-  }, [puzzle, currentInput, foundWords, score, showMessage, finishGame, triggerFeedback, triggerScoreBump])
+  }, [
+    puzzle,
+    currentInput,
+    foundWords,
+    foundWordsSet,
+    score,
+    showMessage,
+    finishGame,
+    triggerFeedback,
+    triggerScoreBump,
+  ])
 
   const endGame = useCallback(() => {
     if (!puzzle) return

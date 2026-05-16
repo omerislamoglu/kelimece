@@ -6,7 +6,8 @@ const STORAGE_KEY = 'kelimece-theme'
 
 function getStoredTheme(): Theme {
   const stored = localStorage.getItem(STORAGE_KEY)
-  if (stored === 'light' || stored === 'dark' || stored === 'system') return stored
+  if (stored === 'light' || stored === 'dark' || stored === 'system')
+    return stored
   return 'system'
 }
 
@@ -31,10 +32,10 @@ export function useTheme() {
     applyTheme(t)
   }, [])
 
-  // Ilk yukleme
+  // Ilk yukleme ve tema degisikligi
   useEffect(() => {
     applyTheme(theme)
-  }, [])
+  }, [theme])
 
   // System tema degisikligini dinle
   useEffect(() => {

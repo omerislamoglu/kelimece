@@ -3,8 +3,18 @@ import { getRankFromScore } from './puzzle'
 
 function formatTurkishDate(dateStr: string): string {
   const months = [
-    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+    'Ocak',
+    'Şubat',
+    'Mart',
+    'Nisan',
+    'Mayıs',
+    'Haziran',
+    'Temmuz',
+    'Ağustos',
+    'Eylül',
+    'Ekim',
+    'Kasım',
+    'Aralık',
   ]
   const [y, m, d] = dateStr.split('-').map(Number)
   return `${d} ${months[m - 1]} ${y}`

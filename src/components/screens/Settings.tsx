@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from 'react'
 import { X, Monitor, Sun, Moon } from 'lucide-react'
-import type { Theme } from '../hooks/useTheme'
+import type { Theme } from '../../hooks/useTheme'
 import {
   isSoundEnabled,
   setSoundEnabled,
   isVibrationEnabled,
   setVibrationEnabled,
-} from '../lib/sounds'
+} from '../../lib/sounds'
 
 interface SettingsProps {
   theme: Theme
@@ -152,13 +152,21 @@ export default function Settings({
             <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
               Ses efektleri
             </span>
-            <Toggle enabled={sound} onChange={handleSoundToggle} label="Ses efektleri" />
+            <Toggle
+              enabled={sound}
+              onChange={handleSoundToggle}
+              label="Ses efektleri"
+            />
           </div>
           <div className="flex items-center justify-between">
             <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
               Titresim
             </span>
-            <Toggle enabled={vibration} onChange={handleVibrationToggle} label="Titresim" />
+            <Toggle
+              enabled={vibration}
+              onChange={handleVibrationToggle}
+              label="Titresim"
+            />
           </div>
         </div>
 
@@ -178,9 +186,7 @@ export default function Settings({
           >
             Geri bildirim gonder
           </a>
-          <p className="mt-2 text-[11px] text-surface-400">
-            Kelimece v1.0.0
-          </p>
+          <p className="mt-2 text-[11px] text-surface-400">Kelimece v1.0.0</p>
         </div>
       </div>
     </div>

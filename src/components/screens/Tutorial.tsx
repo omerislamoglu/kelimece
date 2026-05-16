@@ -1,19 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronRight, ChevronLeft, X } from 'lucide-react'
-
-const STORAGE_KEY = 'kelimece-tutorial-completed'
-
-export function isTutorialCompleted(): boolean {
-  return localStorage.getItem(STORAGE_KEY) === 'true'
-}
-
-export function resetTutorial(): void {
-  localStorage.removeItem(STORAGE_KEY)
-}
-
-function completeTutorial(): void {
-  localStorage.setItem(STORAGE_KEY, 'true')
-}
+import { completeTutorial } from '../../lib/tutorial'
 
 // --- Mini harf grid (animasyonlu) ---
 
@@ -23,35 +10,37 @@ const RADIUS = 40
 
 function MiniGrid() {
   const [highlighted, setHighlighted] = useState<number[]>([])
-  const timeoutRef = useRef<ReturnType<typeof setTimeout>[]>([])
-
   useEffect(() => {
     // "KELİME" kelimesini sırayla vurgula: K(1) E(3) L(2) İ(5) M(4) E(3)
     const sequence = [1, 3, 2, 5, 4, 3]
+    const timers: ReturnType<typeof setTimeout>[] = []
     let step = 0
 
     function animate() {
       if (step < sequence.length) {
         setHighlighted((prev) => [...prev, sequence[step]])
         step++
-        timeoutRef.current.push(setTimeout(animate, 400))
+        timers.push(setTimeout(animate, 400))
       } else {
-        timeoutRef.current.push(
+        timers.push(
           setTimeout(() => {
             setHighlighted([])
             step = 0
-            timeoutRef.current.push(setTimeout(animate, 600))
+            timers.push(setTimeout(animate, 600))
           }, 1000),
         )
       }
     }
 
-    timeoutRef.current.push(setTimeout(animate, 500))
-    return () => timeoutRef.current.forEach(clearTimeout)
+    timers.push(setTimeout(animate, 500))
+    return () => timers.forEach(clearTimeout)
   }, [])
 
   return (
-    <div className="relative mx-auto" style={{ width: '160px', height: '160px' }}>
+    <div
+      className="relative mx-auto"
+      style={{ width: '160px', height: '160px' }}
+    >
       {/* Merkez */}
       <div
         className="absolute flex h-12 w-12 items-center justify-center rounded-full bg-primary-600 text-base font-bold text-white shadow-md dark:bg-accent-500"
@@ -291,7 +280,9 @@ export default function Tutorial({ onComplete }: TutorialProps) {
       {page === TOTAL_SCREENS - 1 && <div className="h-12" />}
 
       {/* Ekran icerik */}
-      <div className={`flex flex-1 transition-all duration-200 ease-out ${slideClass}`}>
+      <div
+        className={`flex flex-1 transition-all duration-200 ease-out ${slideClass}`}
+      >
         {page === 0 && <Screen1 />}
         {page === 1 && <Screen2 />}
         {page === 2 && <Screen3 />}

@@ -1,5 +1,5 @@
-import { useMemo } from 'react'
-import { RANKS, getRankFromScore } from '../lib/puzzle'
+import { useMemo, memo } from 'react'
+import { RANKS, getRankFromScore } from '../../lib/puzzle'
 
 interface ScoreBarProps {
   score: number
@@ -7,7 +7,11 @@ interface ScoreBarProps {
   scoreBump?: boolean
 }
 
-export default function ScoreBar({ score, maxScore, scoreBump }: ScoreBarProps) {
+export default memo(function ScoreBar({
+  score,
+  maxScore,
+  scoreBump,
+}: ScoreBarProps) {
   const rank = getRankFromScore(score, maxScore)
   const ratio = maxScore > 0 ? score / maxScore : 0
   const percentage = Math.min(ratio * 100, 100)
@@ -22,7 +26,13 @@ export default function ScoreBar({ score, maxScore, scoreBump }: ScoreBarProps) 
   }, [score, maxScore])
 
   return (
-    <div className="w-full" role="progressbar" aria-valuenow={score} aria-valuemax={maxScore} aria-label={`Skor: ${score}, Rutbe: ${rank}`}>
+    <div
+      className="w-full"
+      role="progressbar"
+      aria-valuenow={score}
+      aria-valuemax={maxScore}
+      aria-label={`Skor: ${score}, Rutbe: ${rank}`}
+    >
       <div className="mb-2 flex items-baseline justify-between">
         <span
           key={rank}
@@ -30,7 +40,9 @@ export default function ScoreBar({ score, maxScore, scoreBump }: ScoreBarProps) 
         >
           {rank}
         </span>
-        <span className={`text-xs font-medium text-surface-400 ${scoreBump ? 'animate-score-bump' : ''}`}>
+        <span
+          className={`text-xs font-medium text-surface-400 ${scoreBump ? 'animate-score-bump' : ''}`}
+        >
           {score} puan
         </span>
       </div>
@@ -58,4 +70,4 @@ export default function ScoreBar({ score, maxScore, scoreBump }: ScoreBarProps) 
       </div>
     </div>
   )
-}
+})
