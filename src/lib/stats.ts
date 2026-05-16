@@ -1,23 +1,37 @@
 export interface GameStats {
-  gamesPlayed: number
-  currentStreak: number
-  longestStreak: number
-  totalWords: number
-  avgScore: number
-  highScore: number
-  lastPlayedDate: string | null
+  levelsCompleted: number
+  totalStars: number
+  perfectLevels: number
+  totalWordsFound: number
+  totalBonusWords: number
+  totalPangrams: number
+  coinsEarned: number
+  coinsSpent: number
+  hintsUsed: number
+  longestWordFound: string
+  firstPlayDate: string
+  lastPlayDate: string
+  playStreak: number
+  longestPlayStreak: number
 }
 
 const STATS_KEY = 'kelimece-stats'
 
 const DEFAULT_STATS: GameStats = {
-  gamesPlayed: 0,
-  currentStreak: 0,
-  longestStreak: 0,
-  totalWords: 0,
-  avgScore: 0,
-  highScore: 0,
-  lastPlayedDate: null,
+  levelsCompleted: 0,
+  totalStars: 0,
+  perfectLevels: 0,
+  totalWordsFound: 0,
+  totalBonusWords: 0,
+  totalPangrams: 0,
+  coinsEarned: 0,
+  coinsSpent: 0,
+  hintsUsed: 0,
+  longestWordFound: '',
+  firstPlayDate: '',
+  lastPlayDate: '',
+  playStreak: 0,
+  longestPlayStreak: 0,
 }
 
 export function getStats(): GameStats {
@@ -30,7 +44,79 @@ export function getStats(): GameStats {
   }
 }
 
-function isYesterday(dateStr: string): boolean {
+function saveStats(stats: GameStats): void {
+  try {
+    localStorage.setItem(STATS_KEY, JSON.stringify(stats))
+  } catch {
+    // silently ignore
+  }
+}
+
+export function updateStats(updates: Partial<GameStats>): void {
+  const stats = getStats()
+  Object.assign(stats, updates)
+  saveStats(stats)
+}
+
+export function incrementStat<K extends keyof GameStats>(
+  key: K,
+  amount: number,
+): void {
+  const stats = getStats()
+  const current = stats[key]
+  if (typeof current === 'number') {
+    ;(stats[key] as number) = current + amount
+    saveStats(stats)
+  }
+}
+
+export function recordWordFound(
+  word: string,
+  isPangram: boolean,
+  isBonus: boolean,
+): void {
+  const stats = getStats()
+  if (isBonus) {
+    stats.totalBonusWords += 1
+  } else {
+    stats.totalWordsFound += 1
+  }
+  if (isPangram) {
+    stats.totalPangrams += 1
+  }
+  if (word.length > stats.longestWordFound.length) {
+    stats.longestWordFound = word
+  }
+  saveStats(stats)
+}
+
+export function recordLevelComplete(stars: number): void {
+  const stats = getStats()
+  stats.levelsCompleted += 1
+  stats.totalStars += stars
+  if (stars === 3) {
+    stats.perfectLevels += 1
+  }
+  saveStats(stats)
+}
+
+export function recordHintUsed(cost: number): void {
+  const stats = getStats()
+  stats.hintsUsed += 1
+  stats.coinsSpent += cost
+  saveStats(stats)
+}
+
+export function recordCoinsEarned(amount: number): void {
+  incrementStat('coinsEarned', amount)
+}
+
+function getTodayStr(): string {
+  const d = new Date()
+  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+}
+
+function isConsecutiveDay(dateStr: string): boolean {
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
   const y = yesterday.getFullYear()
@@ -39,43 +125,26 @@ function isYesterday(dateStr: string): boolean {
   return dateStr === `${y}-${m}-${d}`
 }
 
-function isToday(dateStr: string): boolean {
-  const today = new Date()
-  const y = today.getFullYear()
-  const m = String(today.getMonth() + 1).padStart(2, '0')
-  const d = String(today.getDate()).padStart(2, '0')
-  return dateStr === `${y}-${m}-${d}`
-}
-
-export function updateStats(
-  date: string,
-  score: number,
-  wordsFound: number,
-): void {
+export function recordDailyPlay(): void {
   const stats = getStats()
+  const today = getTodayStr()
 
-  // Aynı gün zaten kaydedildiyse tekrar kaydetme
-  if (stats.lastPlayedDate === date) return
-
-  stats.gamesPlayed += 1
-  stats.totalWords += wordsFound
-  stats.highScore = Math.max(stats.highScore, score)
-
-  // Ortalama skor hesapla
-  const totalScore = stats.avgScore * (stats.gamesPlayed - 1) + score
-  stats.avgScore = Math.round(totalScore / stats.gamesPlayed)
-
-  // Seri hesaplaması
-  if (stats.lastPlayedDate && isYesterday(stats.lastPlayedDate)) {
-    stats.currentStreak += 1
-  } else if (stats.lastPlayedDate && isToday(stats.lastPlayedDate)) {
-    // Bugün zaten oynamış — seriyi değiştirme (bu satıra ulaşılmamalı ama güvenlik için)
-  } else {
-    stats.currentStreak = 1
+  if (!stats.firstPlayDate) {
+    stats.firstPlayDate = today
   }
-  stats.longestStreak = Math.max(stats.longestStreak, stats.currentStreak)
 
-  stats.lastPlayedDate = date
+  if (stats.lastPlayDate === today) {
+    saveStats(stats)
+    return
+  }
 
-  localStorage.setItem(STATS_KEY, JSON.stringify(stats))
+  if (stats.lastPlayDate && isConsecutiveDay(stats.lastPlayDate)) {
+    stats.playStreak += 1
+  } else {
+    stats.playStreak = 1
+  }
+
+  stats.longestPlayStreak = Math.max(stats.longestPlayStreak, stats.playStreak)
+  stats.lastPlayDate = today
+  saveStats(stats)
 }

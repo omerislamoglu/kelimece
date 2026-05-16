@@ -10,6 +10,12 @@ import {
   STORAGE_KEYS,
 } from '../lib/constants'
 import {
+  recordWordFound,
+  recordLevelComplete,
+  recordHintUsed,
+  recordCoinsEarned,
+} from '../lib/stats'
+import {
   generateLevelPuzzle,
   calculateStars,
   loadProgress,
@@ -218,6 +224,8 @@ export function useGame() {
       setScore((prev) => prev + points)
       triggerScoreBump()
 
+      recordWordFound(word, isPangram, false)
+
       if (isPangram) {
         showMessage(`Tam Kelime! +${points} puan`, 'success')
         triggerFeedback('pangram')
@@ -256,6 +264,9 @@ export function useGame() {
           saveProgress(newProgress)
           setLevelComplete(true)
           fireAllFoundConfetti()
+          if (!progress.completedLevels.includes(puzzle.level)) {
+            recordLevelComplete(stars)
+          }
         }, 600)
       }
       return
@@ -266,6 +277,8 @@ export function useGame() {
       // Bonus word!
       setBonusWords((prev) => [...prev, word])
       setCoins((prev) => prev + COIN_PER_BONUS)
+      recordWordFound(word, false, true)
+      recordCoinsEarned(COIN_PER_BONUS)
       showMessage(`Bonus kelime! +${COIN_PER_BONUS} jeton`, 'success')
       triggerFeedback('bonus')
       playSound('success')
@@ -309,8 +322,11 @@ export function useGame() {
     const revealedWord = unfound[Math.floor(Math.random() * unfound.length)]
 
     setCoins((prev) => prev - HINT_COST)
+    recordHintUsed(HINT_COST)
+
     const newFoundWords = [...foundWords, revealedWord]
     setFoundWords(newFoundWords)
+    recordWordFound(revealedWord, puzzle.pangrams.includes(revealedWord), false)
 
     const points = calculateScore(revealedWord, puzzle.letters)
     setScore((prev) => prev + points)
@@ -345,6 +361,9 @@ export function useGame() {
         saveProgress(newProgress)
         setLevelComplete(true)
         fireAllFoundConfetti()
+        if (!progress.completedLevels.includes(puzzle.level)) {
+          recordLevelComplete(stars)
+        }
       }, 600)
     }
   }, [

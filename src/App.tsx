@@ -1,4 +1,4 @@
-import { useState, lazy, Suspense } from 'react'
+import { useState, useEffect, lazy, Suspense } from 'react'
 import { Coins, Lightbulb, Settings as SettingsIcon, Star } from 'lucide-react'
 import { useGame } from './hooks/useGame'
 import { useTheme } from './hooks/useTheme'
@@ -11,6 +11,7 @@ import Toast from './components/ui/Toast'
 import Skeleton from './components/ui/Skeleton'
 import { isTutorialCompleted, resetTutorial } from './lib/tutorial'
 import { HINT_COST } from './lib/constants'
+import { recordDailyPlay } from './lib/stats'
 
 const LevelComplete = lazy(() => import('./components/screens/LevelComplete'))
 const StatsPanel = lazy(() => import('./components/screens/StatsPanel'))
@@ -46,6 +47,10 @@ function App() {
   } = useGame()
 
   const { theme, setTheme } = useTheme()
+
+  useEffect(() => {
+    recordDailyPlay()
+  }, [])
 
   const [showStats, setShowStats] = useState(false)
   const [showTutorial, setShowTutorial] = useState(() => !isTutorialCompleted())
