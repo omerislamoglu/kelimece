@@ -12,6 +12,7 @@ interface SettingsProps {
   theme: Theme
   onThemeChange: (theme: Theme) => void
   onShowTutorial: () => void
+  onShowStats: () => void
   onClose: () => void
 }
 
@@ -55,6 +56,7 @@ export default function Settings({
   theme,
   onThemeChange,
   onShowTutorial,
+  onShowStats,
   onClose,
 }: SettingsProps) {
   const [visible, setVisible] = useState(false)

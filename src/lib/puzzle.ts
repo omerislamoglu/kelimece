@@ -98,8 +98,8 @@ function buildPuzzleFromWord(
 
   // Her harf için: kaç kelime üretir ve kaç pangram verir
   const letterStats = lettersArr.map((letter) => {
-    const words = findAllValidWords(puzzleLetters, letter)
-    const pgs = findPangrams(words, puzzleLetters)
+    const words = findAllValidWords(lettersArr, letter)
+    const pgs = findPangrams(words, lettersArr)
     return { letter, wordCount: words.length, pangramCount: pgs.length }
   })
 
@@ -121,8 +121,8 @@ function buildPuzzleFromWord(
   const centerLetter =
     topLetters[Math.floor(random() * topLetters.length)].letter
 
-  const validWords = findAllValidWords(puzzleLetters, centerLetter)
-  const pangrams = findPangrams(validWords, puzzleLetters)
+  const validWords = findAllValidWords(lettersArr, centerLetter)
+  const pangrams = findPangrams(validWords, lettersArr)
   const shuffled = shuffle(
     lettersArr.filter((l) => l !== centerLetter),
     random,

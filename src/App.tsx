@@ -1,66 +1,52 @@
 import { useState, lazy, Suspense } from 'react'
 import {
   BarChart3,
-  Flag,
+  Coins,
   HelpCircle,
+  Lightbulb,
   Settings as SettingsIcon,
+  Star,
 } from 'lucide-react'
 import { useGame } from './hooks/useGame'
 import { useTheme } from './hooks/useTheme'
 import LetterGrid from './components/game/LetterGrid'
 import InputDisplay from './components/game/InputDisplay'
 import Controls from './components/game/Controls'
-import ScoreBar from './components/game/ScoreBar'
 import FoundWords from './components/game/FoundWords'
+import HintsPanel from './components/game/HintsPanel'
 import Toast from './components/ui/Toast'
-import ShareButton from './components/ShareButton'
 import Skeleton from './components/ui/Skeleton'
 import { isTutorialCompleted, resetTutorial } from './lib/tutorial'
+import { HINT_COST } from './lib/constants'
 
-const GameComplete = lazy(() => import('./components/screens/GameComplete'))
+const LevelComplete = lazy(() => import('./components/screens/LevelComplete'))
 const StatsPanel = lazy(() => import('./components/screens/StatsPanel'))
 const Settings = lazy(() => import('./components/screens/Settings'))
 const Tutorial = lazy(() => import('./components/screens/Tutorial'))
-
-function formatTurkishDate(dateStr: string): string {
-  const months = [
-    'Ocak',
-    'Subat',
-    'Mart',
-    'Nisan',
-    'Mayis',
-    'Haziran',
-    'Temmuz',
-    'Agustos',
-    'Eylul',
-    'Ekim',
-    'Kasim',
-    'Aralik',
-  ]
-  const [y, m, d] = dateStr.split('-').map(Number)
-  return `${d} ${months[m - 1]} ${y}`
-}
+const CoinShop = lazy(() => import('./components/screens/CoinShop'))
 
 function App() {
   const {
     puzzle,
     foundWords,
+    bonusWords,
     currentInput,
     score,
-    maxScore,
+    coins,
     message,
-    gameComplete,
-    finished,
+    levelComplete,
     inputFeedback,
     scoreBump,
+    progress,
     addLetter,
     removeLetter,
     clearInput,
     shuffleLetters,
     submitWord,
-    showMessage,
-    endGame,
-    setGameComplete,
+    useHint,
+    addCoins,
+    nextLevel,
+    setLevelComplete,
   } = useGame()
 
   const { theme, setTheme } = useTheme()
@@ -68,6 +54,8 @@ function App() {
   const [showStats, setShowStats] = useState(false)
   const [showTutorial, setShowTutorial] = useState(() => !isTutorialCompleted())
   const [showSettings, setShowSettings] = useState(false)
+  const [showHints, setShowHints] = useState(false)
+  const [showShop, setShowShop] = useState(false)
 
   function handleShowTutorial() {
     resetTutorial()
@@ -75,6 +63,9 @@ function App() {
   }
 
   if (!puzzle) return <Skeleton />
+
+  const targetProgress = Math.min(foundWords.length / puzzle.targetWordCount, 1)
+  const unfoundCount = puzzle.validWords.length - foundWords.length
 
   return (
     <div
@@ -88,55 +79,121 @@ function App() {
 
       {/* Header */}
       <header className="px-5 pt-5 pb-3">
-        <div className="mb-1 flex items-center justify-between">
-          <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-100">
-            Kelimece
-          </h1>
-          <div className="flex items-center gap-1">
-            <span className="mr-1 text-xs font-medium text-surface-400">
-              {formatTurkishDate(puzzle.date)}
+        <div className="mb-2 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-100">
+              Kelimece
+            </h1>
+            <span className="rounded-lg bg-primary-100 px-2 py-0.5 text-xs font-bold text-primary-700 dark:bg-accent-500/20 dark:text-accent-400">
+              Bolum {puzzle.level}
             </span>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Jeton */}
             <button
-              onClick={handleShowTutorial}
-              aria-label="Nasil oynanir"
-              className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300"
+              onClick={() => setShowShop(true)}
+              aria-label="Jeton magazasi"
+              className="flex items-center gap-1 rounded-full bg-yellow-500/10 px-2.5 py-1 transition-colors hover:bg-yellow-500/20"
             >
-              <HelpCircle className="h-5 w-5" />
+              <Coins className="h-4 w-4 text-yellow-500" />
+              <span className="text-xs font-bold text-yellow-600 dark:text-yellow-400">
+                {coins}
+              </span>
             </button>
-            <button
-              onClick={() => setShowStats(true)}
-              aria-label="Istatistikler"
-              className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300"
-            >
-              <BarChart3 className="h-5 w-5" />
-            </button>
+            {/* Yildiz */}
+            <div className="flex items-center gap-1 rounded-full bg-surface-100 px-2.5 py-1 dark:bg-surface-800">
+              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+              <span className="text-xs font-bold text-surface-600 dark:text-surface-300">
+                {progress.totalStars}
+              </span>
+            </div>
+            {/* Ayarlar */}
             <button
               onClick={() => setShowSettings(true)}
               aria-label="Ayarlar"
-              className="rounded-lg p-1.5 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300"
+              className="rounded-full p-1.5 text-surface-400 transition-colors hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300"
             >
               <SettingsIcon className="h-5 w-5" />
             </button>
-            <ShareButton
-              puzzle={puzzle}
-              foundWords={foundWords}
-              score={score}
-              maxScore={maxScore}
-              onMessage={showMessage}
-            />
           </div>
         </div>
-        <ScoreBar score={score} maxScore={maxScore} scoreBump={scoreBump} />
+
+        {/* Bolum ilerleme cubugu */}
+        <div className="flex items-center gap-2">
+          <div className="relative h-3 flex-1 overflow-hidden rounded-full bg-surface-200 dark:bg-surface-800">
+            <div
+              className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out ${
+                scoreBump ? 'animate-score-bump' : ''
+              } ${
+                targetProgress >= 1
+                  ? 'bg-success-500'
+                  : 'bg-primary-500 dark:bg-accent-500'
+              }`}
+              style={{ width: `${targetProgress * 100}%` }}
+            />
+          </div>
+          <span className="text-sm font-bold text-surface-600 dark:text-surface-300">
+            {foundWords.length}/{puzzle.targetWordCount}
+          </span>
+          <button
+            onClick={() => setShowHints(!showHints)}
+            aria-label="Ipuclari"
+            className={`rounded-full p-1.5 transition-colors ${
+              showHints
+                ? 'bg-primary-100 text-primary-600 dark:bg-accent-500/20 dark:text-accent-400'
+                : 'text-surface-400 hover:bg-surface-200 hover:text-surface-600 dark:hover:bg-surface-800 dark:hover:text-surface-300'
+            }`}
+          >
+            <Lightbulb className="h-4 w-4" />
+          </button>
+        </div>
       </header>
 
       {/* Bulunan kelimeler toggle */}
       <div className="px-5 pb-2">
         <FoundWords
           foundWords={foundWords}
-          totalWords={puzzle.validWords.length}
+          bonusWords={bonusWords}
+          totalWords={puzzle.targetWordCount}
           pangrams={puzzle.pangrams}
         />
       </div>
+
+      {/* Ipucu paneli */}
+      {showHints && (
+        <div className="animate-fade-in mx-5 mb-2 rounded-2xl border border-surface-200 bg-white/80 p-4 backdrop-blur-sm dark:border-surface-700 dark:bg-surface-800/80">
+          <h3 className="mb-3 text-center text-sm font-semibold text-surface-700 dark:text-surface-300">
+            Ipuclari
+          </h3>
+          <HintsPanel validWords={puzzle.validWords} foundWords={foundWords} />
+
+          {/* Hint purchase button */}
+          {unfoundCount > 0 && (
+            <div className="mt-3 space-y-2">
+              <button
+                onClick={useHint}
+                disabled={coins < HINT_COST}
+                className="flex w-full items-center justify-center gap-2 rounded-xl bg-yellow-500/10 px-4 py-2.5 text-sm font-semibold text-yellow-600 transition-all hover:bg-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-yellow-400"
+              >
+                <Lightbulb className="h-4 w-4" />
+                Kelime Ac ({HINT_COST} jeton)
+              </button>
+              {coins < HINT_COST && (
+                <button
+                  onClick={() => {
+                    setShowHints(false)
+                    setShowShop(true)
+                  }}
+                  className="flex w-full items-center justify-center gap-1 text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-accent-400 dark:hover:text-accent-300"
+                >
+                  <Coins className="h-3.5 w-3.5" />
+                  Jeton Satin Al
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Oyun alani */}
       <main className="flex flex-1 flex-col items-center justify-center gap-5 px-5 pb-8 pt-2">
@@ -160,40 +217,17 @@ function App() {
           onShuffle={shuffleLetters}
           onSubmit={submitWord}
         />
-
-        {/* Bugunu Bitir butonu */}
-        {!finished && foundWords.length > 0 && (
-          <button
-            onClick={endGame}
-            aria-label="Bugunu bitir"
-            className="inline-flex items-center gap-2 rounded-xl border border-surface-300 px-4 py-2 text-sm font-medium text-surface-500 transition-colors hover:border-surface-400 hover:text-surface-700 dark:border-surface-700 dark:text-surface-400 dark:hover:border-surface-500 dark:hover:text-surface-300"
-          >
-            <Flag className="h-4 w-4" />
-            Bugunu Bitir
-          </button>
-        )}
-
-        {/* Bitmis oyun icin tekrar goster */}
-        {finished && !gameComplete && (
-          <button
-            onClick={() => setGameComplete(true)}
-            className="text-sm font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-accent-400 dark:hover:text-accent-300"
-          >
-            Sonuclari Gor
-          </button>
-        )}
       </main>
 
       {/* Modallar */}
       <Suspense fallback={null}>
-        {gameComplete && (
-          <GameComplete
+        {levelComplete && (
+          <LevelComplete
             puzzle={puzzle}
             foundWords={foundWords}
             score={score}
-            maxScore={maxScore}
-            onClose={() => setGameComplete(false)}
-            onMessage={showMessage}
+            onNextLevel={nextLevel}
+            onClose={() => setLevelComplete(false)}
           />
         )}
 
@@ -209,6 +243,14 @@ function App() {
         )}
 
         {showTutorial && <Tutorial onComplete={() => setShowTutorial(false)} />}
+
+        {showShop && (
+          <CoinShop
+            coins={coins}
+            onPurchase={addCoins}
+            onClose={() => setShowShop(false)}
+          />
+        )}
       </Suspense>
     </div>
   )

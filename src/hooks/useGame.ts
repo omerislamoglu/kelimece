@@ -1,114 +1,142 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
-import type { Puzzle } from '../types'
-import { generateDailyPuzzle, calculateScore } from '../lib/puzzle'
-import { updateStats } from '../lib/stats'
+import { calculateScore } from '../lib/puzzle'
 import { playSound, vibrate } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
-import { STORAGE_KEYS } from '../lib/constants'
+import { WORD_SET } from '../lib/dictionary'
+import {
+  COIN_PER_WORD,
+  COIN_PER_PANGRAM,
+  COIN_PER_BONUS,
+  HINT_COST,
+  INITIAL_COINS,
+  STORAGE_KEYS,
+} from '../lib/constants'
+import {
+  generateLevelPuzzle,
+  calculateStars,
+  loadProgress,
+  saveProgress,
+  type LevelPuzzle,
+  type LevelProgress,
+} from '../lib/levels'
 
 interface GameMessage {
   text: string
   type: 'success' | 'error' | 'info'
 }
 
-export type InputFeedback = 'success' | 'error' | 'pangram' | null
+export type InputFeedback = 'success' | 'error' | 'pangram' | 'bonus' | null
 
-interface SavedState {
-  date: string
+interface LevelState {
+  level: number
   foundWords: string[]
+  bonusWords: string[]
   score: number
-  finished: boolean
 }
 
-function loadSavedState(date: string): SavedState | null {
+const LEVEL_STATE_KEY = 'kelimece-level-state'
+
+function loadLevelState(level: number): LevelState | null {
   try {
-    const raw = localStorage.getItem(STORAGE_KEYS.game)
+    const raw = localStorage.getItem(LEVEL_STATE_KEY)
     if (!raw) return null
-    const saved: SavedState = JSON.parse(raw)
-    if (saved.date !== date) return null
+    const saved: LevelState = JSON.parse(raw)
+    if (saved.level !== level) return null
     return saved
   } catch {
     return null
   }
 }
 
-function saveState(
-  date: string,
-  foundWords: string[],
-  score: number,
-  finished: boolean,
-) {
+function saveLevelState(state: LevelState): void {
   try {
-    const state: SavedState = { date, foundWords, score, finished }
-    localStorage.setItem(STORAGE_KEYS.game, JSON.stringify(state))
+    localStorage.setItem(LEVEL_STATE_KEY, JSON.stringify(state))
   } catch {
-    // localStorage full or unavailable — silently ignore
+    // silently ignore
+  }
+}
+
+function clearLevelState(): void {
+  try {
+    localStorage.removeItem(LEVEL_STATE_KEY)
+  } catch {
+    // silently ignore
+  }
+}
+
+function loadCoins(): number {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.coins)
+    if (!raw) return INITIAL_COINS
+    return JSON.parse(raw)
+  } catch {
+    return INITIAL_COINS
+  }
+}
+
+function saveCoins(coins: number): void {
+  try {
+    localStorage.setItem(STORAGE_KEYS.coins, JSON.stringify(coins))
+  } catch {
+    // silently ignore
   }
 }
 
 export function useGame() {
+  const [progress, setProgress] = useState<LevelProgress>(loadProgress)
+  const [coins, setCoins] = useState(loadCoins)
+
   const [initialState] = useState(() => {
-    const today = new Date()
-    const dailyPuzzle = generateDailyPuzzle(today)
-    const saved = loadSavedState(dailyPuzzle.date)
+    const puzzle = generateLevelPuzzle(progress.currentLevel)
+    const saved = loadLevelState(progress.currentLevel)
     return {
-      puzzle: dailyPuzzle,
+      puzzle,
       foundWords: saved?.foundWords ?? [],
+      bonusWords: saved?.bonusWords ?? [],
       score: saved?.score ?? 0,
-      finished: saved?.finished ?? false,
-      statsRecordedInit: saved?.finished ?? false,
     }
   })
 
-  const [puzzle, setPuzzle] = useState<Puzzle | null>(initialState.puzzle)
+  const [puzzle, setPuzzle] = useState<LevelPuzzle>(initialState.puzzle)
   const [foundWords, setFoundWords] = useState<string[]>(
     initialState.foundWords,
+  )
+  const [bonusWords, setBonusWords] = useState<string[]>(
+    initialState.bonusWords,
   )
   const [currentInput, setCurrentInput] = useState('')
   const [score, setScore] = useState(initialState.score)
   const [message, setMessage] = useState<GameMessage | null>(null)
-  const [gameComplete, setGameComplete] = useState(false)
-  const [finished, setFinished] = useState(initialState.finished)
+  const [levelComplete, setLevelComplete] = useState(false)
   const [inputFeedback, setInputFeedback] = useState<InputFeedback>(null)
   const [scoreBump, setScoreBump] = useState(false)
-  const statsRecorded = useRef(initialState.statsRecordedInit)
   const saveTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
   )
 
   const foundWordsSet = useMemo(() => new Set(foundWords), [foundWords])
+  const bonusWordsSet = useMemo(() => new Set(bonusWords), [bonusWords])
 
-  // foundWords veya score degistiginde localStorage'a kaydet (debounced)
+  const targetReached = foundWords.length >= puzzle.targetWordCount
+
+  // Debounced save
   useEffect(() => {
-    if (!puzzle) return
     clearTimeout(saveTimeoutRef.current)
     saveTimeoutRef.current = setTimeout(() => {
-      saveState(puzzle.date, foundWords, score, finished)
+      saveLevelState({
+        level: puzzle.level,
+        foundWords,
+        bonusWords,
+        score,
+      })
     }, 500)
     return () => clearTimeout(saveTimeoutRef.current)
-  }, [puzzle, foundWords, score, finished])
+  }, [puzzle.level, foundWords, bonusWords, score])
 
-  // Gece yarisi puzzle yenileme
+  // Save coins whenever they change
   useEffect(() => {
-    const now = new Date()
-    const tomorrow = new Date(now)
-    tomorrow.setDate(tomorrow.getDate() + 1)
-    tomorrow.setHours(0, 0, 0, 0)
-    const msUntilMidnight = tomorrow.getTime() - now.getTime()
-
-    const timer = setTimeout(() => {
-      const newPuzzle = generateDailyPuzzle(new Date())
-      setPuzzle(newPuzzle)
-      setFoundWords([])
-      setScore(0)
-      setFinished(false)
-      setGameComplete(false)
-      setCurrentInput('')
-      statsRecorded.current = false
-    }, msUntilMidnight)
-
-    return () => clearTimeout(timer)
-  }, [puzzle?.date])
+    saveCoins(coins)
+  }, [coins])
 
   const showMessage = useCallback((text: string, type: GameMessage['type']) => {
     setMessage({ text, type })
@@ -140,7 +168,6 @@ export function useGame() {
   }, [])
 
   const shuffleLetters = useCallback(() => {
-    if (!puzzle) return
     const [center, ...rest] = puzzle.letters
     const shuffled = [...rest]
     for (let i = shuffled.length - 1; i > 0; i--) {
@@ -152,20 +179,7 @@ export function useGame() {
     vibrate(10)
   }, [puzzle])
 
-  const finishGame = useCallback(
-    (date: string, finalScore: number, wordsFound: number) => {
-      if (statsRecorded.current) return
-      statsRecorded.current = true
-      setFinished(true)
-      setGameComplete(true)
-      updateStats(date, finalScore, wordsFound)
-    },
-    [],
-  )
-
   const submitWord = useCallback(() => {
-    if (!puzzle) return
-
     const word = currentInput.toLowerCase()
     setCurrentInput('')
 
@@ -185,15 +199,7 @@ export function useGame() {
       return
     }
 
-    const letterSet = new Set(puzzle.letters)
-    if (![...word].every((ch) => letterSet.has(ch))) {
-      showMessage('Sadece verilen harfler kullanilabilir', 'error')
-      triggerFeedback('error')
-      playSound('error')
-      vibrate([30, 50, 30])
-      return
-    }
-
+    // Already found as target word?
     if (foundWordsSet.has(word)) {
       showMessage('Bu kelimeyi zaten buldunuz', 'info')
       triggerFeedback('error')
@@ -201,59 +207,184 @@ export function useGame() {
       return
     }
 
-    if (!puzzle.validWords.includes(word)) {
-      showMessage('Gecerli bir kelime degil', 'error')
+    // Already found as bonus word?
+    if (bonusWordsSet.has(word)) {
+      showMessage('Bu kelimeyi zaten buldunuz', 'info')
       triggerFeedback('error')
       playSound('error')
-      vibrate([30, 50, 30])
       return
     }
 
-    const points = calculateScore(word, puzzle.letters)
-    const isPangram = puzzle.pangrams.includes(word)
+    // Is it a target word (in the puzzle's valid words)?
+    const isTargetWord = puzzle.validWords.includes(word)
 
-    setFoundWords((prev) => [...prev, word])
-    setScore((prev) => prev + points)
-    triggerScoreBump()
+    if (isTargetWord) {
+      // Normal target word flow
+      const points = calculateScore(word, puzzle.letters)
+      const isPangram = puzzle.pangrams.includes(word)
+      const coinReward = isPangram ? COIN_PER_PANGRAM : COIN_PER_WORD
 
-    if (isPangram) {
-      showMessage(`Tam Kelime! +${points} puan`, 'success')
-      triggerFeedback('pangram')
-      playSound('pangram')
-      vibrate([50, 30, 50, 30, 80])
-      firePangramConfetti()
-    } else {
-      showMessage(`+${points} puan`, 'success')
-      triggerFeedback('success')
+      const newFoundWords = [...foundWords, word]
+      setFoundWords(newFoundWords)
+      setScore((prev) => prev + points)
+      setCoins((prev) => prev + coinReward)
+      triggerScoreBump()
+
+      if (isPangram) {
+        showMessage(
+          `Tam Kelime! +${points} puan, +${coinReward} jeton`,
+          'success',
+        )
+        triggerFeedback('pangram')
+        playSound('pangram')
+        vibrate([50, 30, 50, 30, 80])
+        firePangramConfetti()
+      } else {
+        showMessage(`+${points} puan, +${coinReward} jeton`, 'success')
+        triggerFeedback('success')
+        playSound('success')
+        vibrate(20)
+      }
+
+      // Level complete check
+      if (newFoundWords.length >= puzzle.targetWordCount && !levelComplete) {
+        setTimeout(() => {
+          const stars = calculateStars(
+            newFoundWords.length,
+            puzzle.targetWordCount,
+            puzzle.validWords.length,
+          )
+          const newProgress: LevelProgress = {
+            currentLevel: progress.currentLevel,
+            completedLevels: progress.completedLevels.includes(puzzle.level)
+              ? progress.completedLevels
+              : [...progress.completedLevels, puzzle.level],
+            totalStars: progress.totalStars + stars,
+          }
+          setProgress(newProgress)
+          saveProgress(newProgress)
+          setLevelComplete(true)
+          fireAllFoundConfetti()
+        }, 600)
+      }
+      return
+    }
+
+    // Not a target word — is it a real Turkish word in the dictionary?
+    if (WORD_SET.has(word)) {
+      // Bonus word!
+      setBonusWords((prev) => [...prev, word])
+      setCoins((prev) => prev + COIN_PER_BONUS)
+      showMessage(`Bonus kelime! +${COIN_PER_BONUS} jeton`, 'success')
+      triggerFeedback('bonus')
       playSound('success')
       vibrate(20)
+      return
     }
 
-    // Tum kelimeler bulunduysa otomatik oyun bitisi
-    const newFoundWords = [...foundWords, word]
-    if (puzzle.validWords.length === newFoundWords.length) {
-      setTimeout(() => fireAllFoundConfetti(), 500)
-      finishGame(puzzle.date, score + points, newFoundWords.length)
-    }
+    // Not a real word at all
+    showMessage('Gecerli bir kelime degil', 'error')
+    triggerFeedback('error')
+    playSound('error')
+    vibrate([30, 50, 30])
   }, [
     puzzle,
     currentInput,
     foundWords,
     foundWordsSet,
-    score,
+    bonusWordsSet,
+    levelComplete,
+    progress,
     showMessage,
-    finishGame,
     triggerFeedback,
     triggerScoreBump,
   ])
 
-  const endGame = useCallback(() => {
-    if (!puzzle) return
-    finishGame(puzzle.date, score, foundWords.length)
-  }, [puzzle, score, foundWords.length, finishGame])
+  const useHint = useCallback(() => {
+    if (coins < HINT_COST) {
+      showMessage(`Yetersiz jeton (${HINT_COST} jeton gerekli)`, 'error')
+      playSound('error')
+      return
+    }
+
+    // Find an unfound target word
+    const unfound = puzzle.validWords.filter((w) => !foundWordsSet.has(w))
+    if (unfound.length === 0) {
+      showMessage('Tum kelimeleri zaten buldunuz!', 'info')
+      return
+    }
+
+    // Pick a random unfound word and reveal it
+    const revealedWord = unfound[Math.floor(Math.random() * unfound.length)]
+
+    setCoins((prev) => prev - HINT_COST)
+    const newFoundWords = [...foundWords, revealedWord]
+    setFoundWords(newFoundWords)
+
+    const points = calculateScore(revealedWord, puzzle.letters)
+    setScore((prev) => prev + points)
+    triggerScoreBump()
+
+    showMessage(`Ipucu: "${revealedWord}" açıldı! -${HINT_COST} jeton`, 'info')
+    playSound('success')
+    vibrate(20)
+
+    // Level complete check after hint
+    if (newFoundWords.length >= puzzle.targetWordCount && !levelComplete) {
+      setTimeout(() => {
+        const stars = calculateStars(
+          newFoundWords.length,
+          puzzle.targetWordCount,
+          puzzle.validWords.length,
+        )
+        const newProgress: LevelProgress = {
+          currentLevel: progress.currentLevel,
+          completedLevels: progress.completedLevels.includes(puzzle.level)
+            ? progress.completedLevels
+            : [...progress.completedLevels, puzzle.level],
+          totalStars: progress.totalStars + stars,
+        }
+        setProgress(newProgress)
+        saveProgress(newProgress)
+        setLevelComplete(true)
+        fireAllFoundConfetti()
+      }, 600)
+    }
+  }, [
+    coins,
+    puzzle,
+    foundWords,
+    foundWordsSet,
+    levelComplete,
+    progress,
+    showMessage,
+    triggerScoreBump,
+  ])
+
+  const addCoins = useCallback((amount: number) => {
+    setCoins((prev) => prev + amount)
+  }, [])
+
+  const nextLevel = useCallback(() => {
+    const next = progress.currentLevel + 1
+    const newProgress: LevelProgress = {
+      ...progress,
+      currentLevel: next,
+    }
+    setProgress(newProgress)
+    saveProgress(newProgress)
+
+    const newPuzzle = generateLevelPuzzle(next)
+    setPuzzle(newPuzzle)
+    setFoundWords([])
+    setBonusWords([])
+    setScore(0)
+    setCurrentInput('')
+    setLevelComplete(false)
+    clearLevelState()
+  }, [progress])
 
   const maxScore = useMemo(() => {
-    if (!puzzle) return 0
     return puzzle.validWords.reduce(
       (sum, w) => sum + calculateScore(w, puzzle.letters),
       0,
@@ -263,21 +394,26 @@ export function useGame() {
   return {
     puzzle,
     foundWords,
+    bonusWords,
     currentInput,
     score,
     maxScore,
+    coins,
     message,
-    gameComplete,
-    finished,
+    levelComplete,
+    targetReached,
     inputFeedback,
     scoreBump,
+    progress,
     addLetter,
     removeLetter,
     clearInput,
     shuffleLetters,
     submitWord,
+    useHint,
+    addCoins,
     showMessage,
-    endGame,
-    setGameComplete,
+    nextLevel,
+    setLevelComplete,
   }
 }

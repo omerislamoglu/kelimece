@@ -3,12 +3,14 @@ import { ChevronDown, X } from 'lucide-react'
 
 interface FoundWordsProps {
   foundWords: string[]
+  bonusWords: string[]
   totalWords: number
   pangrams: string[]
 }
 
 export default memo(function FoundWords({
   foundWords,
+  bonusWords,
   totalWords,
   pangrams,
 }: FoundWordsProps) {
@@ -17,6 +19,11 @@ export default memo(function FoundWords({
   const sortedWords = useMemo(
     () => [...foundWords].sort((a, b) => a.localeCompare(b, 'tr')),
     [foundWords],
+  )
+
+  const sortedBonus = useMemo(
+    () => [...bonusWords].sort((a, b) => a.localeCompare(b, 'tr')),
+    [bonusWords],
   )
 
   const pangramSet = useMemo(() => new Set(pangrams), [pangrams])
@@ -42,6 +49,11 @@ export default memo(function FoundWords({
           <span className="text-sm font-medium text-surface-400">
             / {totalWords} kelime
           </span>
+          {bonusWords.length > 0 && (
+            <span className="text-xs font-medium text-yellow-500">
+              +{bonusWords.length} bonus
+            </span>
+          )}
         </div>
         <ChevronDown
           className={`h-5 w-5 text-surface-400 transition-transform duration-200 ${
@@ -58,7 +70,7 @@ export default memo(function FoundWords({
             onClick={() => setIsOpen(false)}
           />
 
-          {/* Bottom sheet (mobil) / Dropdown (masaüstü) */}
+          {/* Bottom sheet (mobil) / Dropdown (masaustu) */}
           <div
             className="fixed inset-x-0 bottom-0 z-50 max-h-[65vh] animate-slide-up overflow-hidden
                        rounded-t-3xl bg-surface-50 shadow-2xl
@@ -89,25 +101,53 @@ export default memo(function FoundWords({
               className="overflow-y-auto px-5 py-3"
               style={{ maxHeight: 'calc(65vh - 90px)' }}
             >
-              {sortedWords.length === 0 ? (
+              {sortedWords.length === 0 && sortedBonus.length === 0 ? (
                 <p className="py-6 text-center text-sm text-surface-400">
-                  Henüz kelime bulunamadı
+                  Henuz kelime bulunamadi
                 </p>
               ) : (
-                <div className="flex flex-wrap gap-2 pb-2">
-                  {sortedWords.map((word) => (
-                    <span
-                      key={word}
-                      className={`animate-fade-in inline-block rounded-full px-3 py-1 text-sm font-semibold ${
-                        pangramSet.has(word)
-                          ? 'bg-primary-600/10 text-primary-600 ring-1 ring-primary-500/30 dark:bg-accent-500/10 dark:text-accent-400 dark:ring-accent-500/30'
-                          : 'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300'
-                      }`}
-                    >
-                      {word}
-                    </span>
-                  ))}
-                </div>
+                <>
+                  {/* Target words */}
+                  {sortedWords.length > 0 && (
+                    <div className="flex flex-wrap gap-2 pb-2">
+                      {sortedWords.map((word) => (
+                        <span
+                          key={word}
+                          className={`animate-fade-in inline-block rounded-full px-3 py-1 text-sm font-semibold ${
+                            pangramSet.has(word)
+                              ? 'bg-primary-600/10 text-primary-600 ring-1 ring-primary-500/30 dark:bg-accent-500/10 dark:text-accent-400 dark:ring-accent-500/30'
+                              : 'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300'
+                          }`}
+                        >
+                          {word}
+                        </span>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Bonus words */}
+                  {sortedBonus.length > 0 && (
+                    <>
+                      <div className="my-2 flex items-center gap-2">
+                        <div className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
+                        <span className="text-xs font-medium text-yellow-500">
+                          Bonus
+                        </span>
+                        <div className="h-px flex-1 bg-surface-200 dark:bg-surface-700" />
+                      </div>
+                      <div className="flex flex-wrap gap-2 pb-2">
+                        {sortedBonus.map((word) => (
+                          <span
+                            key={word}
+                            className="animate-fade-in inline-block rounded-full bg-yellow-500/10 px-3 py-1 text-sm font-semibold text-yellow-600 dark:text-yellow-400"
+                          >
+                            {word}
+                          </span>
+                        ))}
+                      </div>
+                    </>
+                  )}
+                </>
               )}
             </div>
           </div>
