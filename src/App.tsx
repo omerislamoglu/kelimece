@@ -42,6 +42,7 @@ function App() {
     goToLevel,
     nextLevel,
     setLevelComplete,
+    showMessage,
   } = useGame()
 
   const { theme, setTheme } = useTheme()
@@ -228,6 +229,7 @@ function App() {
             score={score}
             onNextLevel={nextLevel}
             onClose={() => setLevelComplete(false)}
+            onMessage={showMessage}
           />
         )}
 

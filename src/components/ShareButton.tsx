@@ -1,26 +1,25 @@
 import { Share2 } from 'lucide-react'
-import type { Puzzle } from '../types'
 import { formatShareText, shareResult } from '../lib/share'
 
 interface ShareButtonProps {
-  puzzle: Puzzle
+  level: number
   foundWords: string[]
+  totalWords: number
+  stars: number
   score: number
-  maxScore: number
   onMessage: (text: string, type: 'success' | 'error' | 'info') => void
 }
 
 export default function ShareButton({
-  puzzle,
+  level,
   foundWords,
+  totalWords,
+  stars,
   score,
-  maxScore,
   onMessage,
 }: ShareButtonProps) {
-  const disabled = foundWords.length === 0
-
   async function handleShare() {
-    const text = formatShareText(puzzle, foundWords, score, maxScore)
+    const text = formatShareText(level, foundWords, totalWords, stars, score)
     const result = await shareResult(text)
 
     if (result === 'shared') {
@@ -35,9 +34,8 @@ export default function ShareButton({
   return (
     <button
       onClick={handleShare}
-      disabled={disabled}
       aria-label="Sonucu paylas"
-      className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700 active:bg-primary-800 disabled:cursor-not-allowed disabled:opacity-40"
+      className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700 active:bg-primary-800"
     >
       <Share2 className="h-4 w-4" />
       Sonucu Paylaş

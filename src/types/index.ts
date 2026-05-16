@@ -1,7 +1,1 @@
-export interface Puzzle {
-  letters: string[]
-  centerLetter: string
-  validWords: string[]
-  pangrams: string[]
-  date: string
-}
+export type { LevelPuzzle, LevelProgress } from '../lib/levels'

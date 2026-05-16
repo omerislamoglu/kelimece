@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { Star, ChevronRight } from 'lucide-react'
 import { calculateStars, type LevelPuzzle } from '../../lib/levels'
+import ShareButton from '../ShareButton'
 
 interface LevelCompleteProps {
   puzzle: LevelPuzzle
@@ -8,6 +9,7 @@ interface LevelCompleteProps {
   score: number
   onNextLevel: () => void
   onClose: () => void
+  onMessage: (text: string, type: 'success' | 'error' | 'info') => void
 }
 
 export default function LevelComplete({
@@ -16,6 +18,7 @@ export default function LevelComplete({
   score,
   onNextLevel,
   onClose,
+  onMessage,
 }: LevelCompleteProps) {
   const [visible, setVisible] = useState(false)
   const [showingAd, setShowingAd] = useState(false)
@@ -124,6 +127,18 @@ export default function LevelComplete({
             </div>
             <div className="text-xs font-medium text-surface-400">Puan</div>
           </div>
+        </div>
+
+        {/* Paylas butonu */}
+        <div className="mb-3 flex justify-center">
+          <ShareButton
+            level={puzzle.level}
+            foundWords={foundWords}
+            totalWords={puzzle.validWords.length}
+            stars={stars}
+            score={score}
+            onMessage={onMessage}
+          />
         </div>
 
         {/* Sonraki Bolum butonu */}

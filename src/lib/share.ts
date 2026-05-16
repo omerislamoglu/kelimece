@@ -1,44 +1,20 @@
-import type { Puzzle } from '../types'
-import { getRankFromScore } from './puzzle'
-
-function formatTurkishDate(dateStr: string): string {
-  const months = [
-    'Ocak',
-    'Şubat',
-    'Mart',
-    'Nisan',
-    'Mayıs',
-    'Haziran',
-    'Temmuz',
-    'Ağustos',
-    'Eylül',
-    'Ekim',
-    'Kasım',
-    'Aralık',
-  ]
-  const [y, m, d] = dateStr.split('-').map(Number)
-  return `${d} ${months[m - 1]} ${y}`
-}
-
 export function formatShareText(
-  puzzle: Puzzle,
+  level: number,
   foundWords: string[],
+  totalWords: number,
+  stars: number,
   score: number,
-  maxScore: number,
 ): string {
-  const rank = getRankFromScore(score, maxScore)
-  const totalWords = puzzle.validWords.length
-  const pangramCount = foundWords.filter((w) =>
-    puzzle.pangrams.includes(w),
-  ).length
+  const starStr =
+    '★'.repeat(stars) + '☆'.repeat(3 - stars)
 
   return [
-    `Kelimece \u2022 ${formatTurkishDate(puzzle.date)}`,
-    `\u2B50 Skor: ${score} \u2014 ${rank}`,
+    `Kelimece \u2022 B\u00F6l\u00FCm ${level}`,
+    starStr,
     `\uD83D\uDCDD ${foundWords.length}/${totalWords} kelime bulundu`,
-    `\uD83D\uDC8E ${pangramCount} tam kelime`,
+    `\u2B50 Skor: ${score}`,
     '',
-    'kelimece.app',
+    `kelimece.app/seviye/${level}`,
   ].join('\n')
 }
 
