@@ -12,6 +12,7 @@ import Skeleton from './components/ui/Skeleton'
 import { isTutorialCompleted, resetTutorial } from './lib/tutorial'
 import { HINT_COST } from './lib/constants'
 import { recordDailyPlay } from './lib/stats'
+import { loadSpellChecker } from './lib/spellchecker'
 
 const LevelComplete = lazy(() => import('./components/screens/LevelComplete'))
 const StatsPanel = lazy(() => import('./components/screens/StatsPanel'))
@@ -50,6 +51,10 @@ function App() {
 
   useEffect(() => {
     recordDailyPlay()
+  }, [])
+
+  useEffect(() => {
+    loadSpellChecker().catch(console.error)
   }, [])
 
   const [showStats, setShowStats] = useState(false)

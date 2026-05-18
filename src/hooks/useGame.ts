@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { calculateScore } from '../lib/puzzle'
 import { playSound, vibrate } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
-import { WORD_SET, normalizeWord } from '../lib/dictionary'
+import { isAcceptedWord, normalizeWord } from '../lib/dictionary'
 import {
   COIN_PER_BONUS,
   HINT_COST,
@@ -273,7 +273,7 @@ export function useGame() {
     }
 
     // Not a target word — is it a real Turkish word in the dictionary?
-    if (WORD_SET.has(word)) {
+    if (isAcceptedWord(word)) {
       // Bonus word!
       setBonusWords((prev) => [...prev, word])
       setCoins((prev) => prev + COIN_PER_BONUS)
