@@ -958,6 +958,7 @@ export const WORDS: string[] = [
   'çakıl',
   'çakıltaşı',
   'çalar',
+  'çalı',
   'çalık',
   'çalılık',
   'çalım',
@@ -1054,6 +1055,7 @@ export const WORDS: string[] = [
   'çılgın',
   'çınar',
   'çıplak',
+  'çıra',
   'çırağanlık',
   'çırak',
   'çıtçıt',
@@ -2659,6 +2661,7 @@ export const WORDS: string[] = [
   'karı',
   'karın',
   'karınca',
+  'karış',
   'karışık',
   'karikatür',
   'karine',
@@ -4230,10 +4233,12 @@ export const WORDS: string[] = [
   'şampiyon',
   'şampuan',
   'şangırtı',
+  'şanlı',
   'şans',
   'şapka',
   'şarap',
   'şarj',
+  'şark',
   'şarkı',
   'şarkıcı',
   'şaşırma',
@@ -5158,5 +5163,5 @@ export const WORDS: string[] = [
 const wordSet = new Set(WORDS)
 
 export function isValidWord(word: string): boolean {
-  return wordSet.has(word.toLowerCase())
+  return wordSet.has(word.toLocaleLowerCase('tr-TR'))
 }

@@ -2,7 +2,7 @@ import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { calculateScore } from '../lib/puzzle'
 import { playSound, vibrate } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
-import { WORD_SET } from '../lib/dictionary'
+import { WORD_SET, normalizeWord } from '../lib/dictionary'
 import {
   COIN_PER_BONUS,
   HINT_COST,
@@ -184,7 +184,7 @@ export function useGame() {
   }, [puzzle])
 
   const submitWord = useCallback(() => {
-    const word = currentInput.toLowerCase()
+    const word = normalizeWord(currentInput)
     setCurrentInput('')
 
     if (word.length < 4) {

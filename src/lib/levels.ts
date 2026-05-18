@@ -1,5 +1,5 @@
 import { LEVEL_DATA } from '../data/levels'
-import { findAllValidWords, findPangrams } from './dictionary'
+import { findAllValidWords, findPangrams, normalizeWord } from './dictionary'
 
 export interface LevelPuzzle {
   level: number
@@ -25,12 +25,16 @@ export function generateLevelPuzzle(level: number): LevelPuzzle {
   const idx = Math.max(0, Math.min(level - 1, LEVEL_DATA.length - 1))
   const data = LEVEL_DATA[idx]
 
-  // Center letter always first in the array
-  const others = data.letters.filter((l) => l !== data.center)
-  const orderedLetters = [data.center, ...others]
+  // Normalize letters with Turkish locale
+  const normalizedLetters = data.letters.map((l) => normalizeWord(l))
+  const normalizedCenter = normalizeWord(data.center)
 
-  const validWords = findAllValidWords(data.letters, data.center)
-  const pangrams = findPangrams(validWords, data.letters)
+  // Center letter always first in the array
+  const others = normalizedLetters.filter((l) => l !== normalizedCenter)
+  const orderedLetters = [normalizedCenter, ...others]
+
+  const validWords = findAllValidWords(normalizedLetters, normalizedCenter)
+  const pangrams = findPangrams(validWords, normalizedLetters)
 
   return {
     level,

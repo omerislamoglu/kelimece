@@ -64,7 +64,7 @@ export default function Controls({
         return
       }
 
-      const key = e.key.toLowerCase()
+      const key = e.key.toLocaleLowerCase('tr-TR')
       const available = availableCounts.get(key) ?? 0
       const used = usedCounts.get(key) ?? 0
       if (available > 0 && used < available) {

@@ -4,7 +4,7 @@ import { MIN_WORD_LENGTH } from './constants'
 export const WORD_SET = new Set(WORDS)
 
 export function normalizeWord(word: string): string {
-  return word.toLowerCase().trim()
+  return word.toLocaleLowerCase('tr-TR').trim()
 }
 
 /**
