@@ -39,7 +39,7 @@ export function generateLevelPuzzle(level: number): LevelPuzzle {
   return {
     level,
     letters: orderedLetters,
-    centerLetter: data.center,
+    centerLetter: normalizedCenter,
     validWords,
     pangrams,
     targetWordCount: data.target,

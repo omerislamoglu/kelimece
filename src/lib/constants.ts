@@ -43,6 +43,14 @@ export const COIN_PACKAGES = [
 
 export type CoinPackage = (typeof COIN_PACKAGES)[number]
 
+/** Yerel saat diliminde YYYY-MM-DD formatında tarih string'i döndürür. */
+export function localDateStr(date: Date = new Date()): string {
+  const y = date.getFullYear()
+  const m = String(date.getMonth() + 1).padStart(2, '0')
+  const d = String(date.getDate()).padStart(2, '0')
+  return `${y}-${m}-${d}`
+}
+
 export const RANKS = [
   { threshold: 0, label: 'Başlangıç' },
   { threshold: 0.05, label: 'Çırak' },

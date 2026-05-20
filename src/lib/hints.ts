@@ -1,4 +1,5 @@
 import type { LevelPuzzle } from './levels'
+import { localDateStr } from './constants'
 
 export type HintType = 'letter_count' | 'first_letter' | 'reveal_word'
 
@@ -17,7 +18,7 @@ const FREE_HINT_KEY = 'kelimece-free-hint-date'
 export function isFreeHintAvailable(): boolean {
   try {
     const used = localStorage.getItem(FREE_HINT_KEY)
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localDateStr()
     return used !== today
   } catch {
     return false
@@ -26,7 +27,7 @@ export function isFreeHintAvailable(): boolean {
 
 export function consumeFreeHint(): void {
   try {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = localDateStr()
     localStorage.setItem(FREE_HINT_KEY, today)
   } catch {
     // ignore

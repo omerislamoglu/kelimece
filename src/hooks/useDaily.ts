@@ -5,7 +5,7 @@ import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
 import { isAcceptedWord, normalizeWord } from '../lib/dictionary'
 import { isSpellCheckerReady, loadSpellChecker } from '../lib/spellchecker'
 import { fetchDefinition } from '../lib/definitions'
-import { COIN_PER_BONUS } from '../lib/constants'
+import { COIN_PER_BONUS, localDateStr } from '../lib/constants'
 import type { MessageType, InputFeedback } from './useGame'
 import {
   getDailyPuzzle,
@@ -24,7 +24,7 @@ interface DailyMessage {
 
 export function useDaily() {
   const today = getToday()
-  const dateStr = today.toISOString().slice(0, 10)
+  const dateStr = localDateStr(today)
 
   const [puzzle] = useState<DailyPuzzle>(() => getDailyPuzzle(today))
 
@@ -72,10 +72,18 @@ export function useDaily() {
     return () => clearTimeout(saveTimeoutRef.current)
   }, [dateStr, foundWords, bonusWords, score, completed])
 
+  const messageTimeoutRef2 = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
+
   const showMessage = useCallback(
     (text: string, type: DailyMessage['type'], reportable?: boolean) => {
+      clearTimeout(messageTimeoutRef2.current)
       setMessage({ text, type, reportable })
-      setTimeout(() => setMessage(null), reportable ? 4000 : 2000)
+      messageTimeoutRef2.current = setTimeout(
+        () => setMessage(null),
+        reportable ? 4000 : 2000,
+      )
     },
     [],
   )

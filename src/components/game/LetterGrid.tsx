@@ -38,7 +38,7 @@ const LetterButton = memo(function LetterButton({
       type="button"
       onClick={handleClick}
       disabled={disabled}
-      aria-label={`Harf ${letter.toUpperCase()}${isCenter ? ' (merkez)' : ''}`}
+      aria-label={`Harf ${letter.toLocaleUpperCase('tr-TR')}${isCenter ? ' (merkez)' : ''}`}
       className={`
         absolute flex items-center justify-center rounded-2xl
         font-extrabold uppercase select-none

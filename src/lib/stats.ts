@@ -15,6 +15,8 @@ export interface GameStats {
   longestPlayStreak: number
 }
 
+import { localDateStr } from './constants'
+
 const STATS_KEY = 'kelimece-stats'
 const DEFINITIONS_CACHE_KEY = 'kelimece-definitions'
 
@@ -164,17 +166,13 @@ export function recordCoinsEarned(amount: number): void {
 }
 
 function getTodayStr(): string {
-  const d = new Date()
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`
+  return localDateStr()
 }
 
 function isConsecutiveDay(dateStr: string): boolean {
   const yesterday = new Date()
   yesterday.setDate(yesterday.getDate() - 1)
-  const y = yesterday.getFullYear()
-  const m = String(yesterday.getMonth() + 1).padStart(2, '0')
-  const d = String(yesterday.getDate()).padStart(2, '0')
-  return dateStr === `${y}-${m}-${d}`
+  return dateStr === localDateStr(yesterday)
 }
 
 export function recordDailyPlay(): void {

@@ -19,6 +19,10 @@ export function useFocusTrap<T extends HTMLElement>(active = true) {
     if (!root) return
     const dialog = root
 
+    // Lock body scroll while modal is open
+    const prevOverflow = document.body.style.overflow
+    document.body.style.overflow = 'hidden'
+
     const previousFocus = document.activeElement
     const focusable = Array.from(
       dialog.querySelectorAll<HTMLElement>(FOCUSABLE_SELECTOR),
@@ -55,6 +59,7 @@ export function useFocusTrap<T extends HTMLElement>(active = true) {
 
     return () => {
       document.removeEventListener('keydown', handleKeyDown, true)
+      document.body.style.overflow = prevOverflow
       if (previousFocus instanceof HTMLElement) {
         previousFocus.focus()
       }

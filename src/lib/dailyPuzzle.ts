@@ -1,6 +1,6 @@
 import { WORDS } from '../data/words'
 import { findAllValidWords, findPangrams, normalizeWord } from './dictionary'
-import { PUZZLE_LETTER_COUNT } from './constants'
+import { PUZZLE_LETTER_COUNT, localDateStr } from './constants'
 
 // ── Deterministik PRNG (Mulberry32) ────────────────────────────────────────────
 
@@ -42,7 +42,7 @@ export interface DailyPuzzle {
 export function getDailyPuzzle(date: Date): DailyPuzzle {
   const seed = dateSeed(date)
   const rng = mulberry32(seed)
-  const dateStr = date.toISOString().slice(0, 10)
+  const dateStr = localDateStr(date)
 
   // Find all 7-unique-letter words (potential pangram sources)
   const pangramCandidates = WORDS.filter((w) => {
@@ -138,7 +138,7 @@ export function saveDailyState(state: DailyState): void {
 }
 
 export function isDailyCompleted(date: Date): boolean {
-  const dateStr = date.toISOString().slice(0, 10)
+  const dateStr = localDateStr(date)
   const state = loadDailyState(dateStr)
   return state?.completed ?? false
 }
@@ -190,9 +190,9 @@ export function recordDailyCompletion(date: string, isPerfect: boolean): void {
   if (isPerfect) stats.perfectDays += 1
 
   // Calculate streak
-  const yesterday = new Date(date)
+  const yesterday = new Date(date + 'T12:00:00')
   yesterday.setDate(yesterday.getDate() - 1)
-  const yesterdayStr = yesterday.toISOString().slice(0, 10)
+  const yesterdayStr = localDateStr(yesterday)
 
   if (stats.lastPlayedDate === yesterdayStr) {
     stats.streak += 1

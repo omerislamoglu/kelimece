@@ -21,6 +21,7 @@ import {
   HINT_COST_REVEAL,
   INITIAL_COINS,
   STORAGE_KEYS,
+  localDateStr,
 } from '../lib/constants'
 import {
   getLetterCountHint,
@@ -104,7 +105,11 @@ function loadCoins(): number {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.coins)
     if (!raw) return INITIAL_COINS
-    return JSON.parse(raw)
+    const parsed = JSON.parse(raw)
+    if (typeof parsed !== 'number' || !Number.isFinite(parsed) || parsed < 0) {
+      return INITIAL_COINS
+    }
+    return parsed
   } catch {
     return INITIAL_COINS
   }
@@ -174,10 +179,18 @@ export function useGame() {
     saveCoins(coins)
   }, [coins])
 
+  const messageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
+    undefined,
+  )
+
   const showMessage = useCallback(
     (text: string, type: GameMessage['type'], reportable?: boolean) => {
+      clearTimeout(messageTimeoutRef.current)
       setMessage({ text, type, reportable })
-      setTimeout(() => setMessage(null), reportable ? 4000 : 2000)
+      messageTimeoutRef.current = setTimeout(
+        () => setMessage(null),
+        reportable ? 4000 : 2000,
+      )
     },
     [],
   )
@@ -412,7 +425,7 @@ export function useGame() {
     if (!word) return
 
     // Daily limit: max 3 reports
-    const todayKey = new Date().toISOString().slice(0, 10)
+    const todayKey = localDateStr()
     const REPORT_COUNT_KEY = 'kelimece-report-count'
     try {
       const raw = localStorage.getItem(REPORT_COUNT_KEY)
