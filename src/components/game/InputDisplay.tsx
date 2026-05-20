@@ -26,6 +26,7 @@ export default memo(function InputDisplay({
       const t = setTimeout(() => setAnimatingIdx(null), 150)
       return () => clearTimeout(t)
     }
+    return undefined
   }, [currentInput])
 
   const feedbackClass =

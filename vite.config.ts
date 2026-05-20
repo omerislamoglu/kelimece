@@ -103,9 +103,7 @@ export default defineConfig({
           ) {
             return 'levels'
           }
-          if (id.includes('/src/data/words-extended')) {
-            return 'words-extended'
-          }
+          return undefined
         },
       },
     },

@@ -32,6 +32,7 @@ export default memo(function FoundWords({
       return () => clearTimeout(t)
     }
     prevCountRef.current = foundWords.length
+    return undefined
   }, [foundWords])
 
   useEffect(() => {
@@ -43,6 +44,7 @@ export default memo(function FoundWords({
       return () => clearTimeout(t)
     }
     prevBonusCountRef.current = bonusWords.length
+    return undefined
   }, [bonusWords])
 
   const sortedWords = useMemo(
