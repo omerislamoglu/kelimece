@@ -10,7 +10,6 @@ import HintsPanel from './components/game/HintsPanel'
 import Toast from './components/ui/Toast'
 import Skeleton from './components/ui/Skeleton'
 import { isTutorialCompleted, resetTutorial } from './lib/tutorial'
-import { HINT_COST } from './lib/constants'
 import { recordDailyPlay } from './lib/stats'
 import { loadSpellChecker } from './lib/spellchecker'
 
@@ -40,7 +39,10 @@ function App() {
     shuffleLetters,
     submitWord,
     reportLastRejectedWord,
-    useHint,
+    useLetterCountHint,
+    useFirstLetterHint,
+    useRevealHint,
+    freeHintAvailable,
     addCoins,
     goToLevel,
     nextLevel,
@@ -73,7 +75,6 @@ function App() {
   if (!puzzle) return <Skeleton />
 
   const targetProgress = Math.min(foundWords.length / puzzle.targetWordCount, 1)
-  const unfoundCount = puzzle.validWords.length - foundWords.length
 
   return (
     <div
@@ -176,33 +177,17 @@ function App() {
           <h3 className="mb-3 text-center text-sm font-semibold text-surface-700 dark:text-surface-300">
             Ipuclari
           </h3>
-          <HintsPanel validWords={puzzle.validWords} foundWords={foundWords} />
-
-          {/* Hint purchase button */}
-          {unfoundCount > 0 && (
-            <div className="mt-3 space-y-2">
-              <button
-                onClick={useHint}
-                disabled={coins < HINT_COST}
-                className="flex w-full items-center justify-center gap-2 rounded-xl bg-yellow-500/10 px-4 py-2.5 text-sm font-semibold text-yellow-600 transition-all hover:bg-yellow-500/20 disabled:cursor-not-allowed disabled:opacity-40 dark:text-yellow-400"
-              >
-                <Lightbulb className="h-4 w-4" />
-                Kelime Ac ({HINT_COST} jeton)
-              </button>
-              {coins < HINT_COST && (
-                <button
-                  onClick={() => {
-                    setShowHints(false)
-                    setShowShop(true)
-                  }}
-                  className="flex w-full items-center justify-center gap-1 text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-accent-400 dark:hover:text-accent-300"
-                >
-                  <Coins className="h-3.5 w-3.5" />
-                  Jeton Satin Al
-                </button>
-              )}
-            </div>
-          )}
+          <HintsPanel
+            coins={coins}
+            freeHintAvailable={freeHintAvailable}
+            onLetterCountHint={useLetterCountHint}
+            onFirstLetterHint={useFirstLetterHint}
+            onRevealHint={useRevealHint}
+            onOpenShop={() => {
+              setShowHints(false)
+              setShowShop(true)
+            }}
+          />
         </div>
       )}
 

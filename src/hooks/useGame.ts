@@ -7,10 +7,21 @@ import { reportWord } from '../lib/wordReports'
 import { fetchDefinition } from '../lib/definitions'
 import {
   COIN_PER_BONUS,
-  HINT_COST,
+  HINT_COST_LETTER_COUNT,
+  HINT_COST_FIRST_LETTER,
+  HINT_COST_REVEAL,
   INITIAL_COINS,
   STORAGE_KEYS,
 } from '../lib/constants'
+import {
+  getLetterCountHint,
+  getFirstLetterHint,
+  pickRandomUnfoundWord,
+  isFreeHintAvailable,
+  consumeFreeHint,
+  type LetterCountHint,
+  type FirstLetterHint,
+} from '../lib/hints'
 import {
   recordWordFound,
   recordLevelComplete,
@@ -382,35 +393,70 @@ export function useGame() {
     vibrate(20)
   }, [puzzle.level, showMessage])
 
-  const useHint = useCallback(() => {
-    if (coins < HINT_COST) {
-      showMessage(`Yetersiz jeton (${HINT_COST} jeton gerekli)`, 'error')
-      playSound('error')
-      return
-    }
+  const freeHintAvailable = isFreeHintAvailable()
 
-    // Find an unfound target word
-    const unfound = puzzle.validWords.filter((w) => !foundWordsSet.has(w))
-    if (unfound.length === 0) {
+  const spendCoinsForHint = useCallback(
+    (cost: number): boolean => {
+      if (freeHintAvailable) {
+        consumeFreeHint()
+        showMessage('Günlük ücretsiz ipucu kullanıldı!', 'info')
+        return true
+      }
+      if (coins < cost) {
+        showMessage(`Yetersiz jeton (${cost} jeton gerekli)`, 'error')
+        playSound('error')
+        return false
+      }
+      setCoins((prev) => prev - cost)
+      recordHintUsed(cost)
+      return true
+    },
+    [coins, freeHintAvailable, showMessage],
+  )
+
+  const useLetterCountHint = useCallback((): LetterCountHint[] | null => {
+    if (!spendCoinsForHint(HINT_COST_LETTER_COUNT)) return null
+    const result = getLetterCountHint(puzzle, foundWords)
+    if (result.length === 0) {
       showMessage('Tum kelimeleri zaten buldunuz!', 'info')
-      return
+      return null
     }
+    playSound('success')
+    return result
+  }, [puzzle, foundWords, spendCoinsForHint, showMessage])
 
-    // Pick a random unfound word and reveal it
-    const revealedWord = unfound[Math.floor(Math.random() * unfound.length)]
+  const useFirstLetterHint = useCallback((): FirstLetterHint[] | null => {
+    if (!spendCoinsForHint(HINT_COST_FIRST_LETTER)) return null
+    const result = getFirstLetterHint(puzzle, foundWords)
+    if (result.length === 0) {
+      showMessage('Tum kelimeleri zaten buldunuz!', 'info')
+      return null
+    }
+    playSound('success')
+    return result
+  }, [puzzle, foundWords, spendCoinsForHint, showMessage])
 
-    setCoins((prev) => prev - HINT_COST)
-    recordHintUsed(HINT_COST)
+  const useRevealHint = useCallback((): string | null => {
+    const word = pickRandomUnfoundWord(puzzle, foundWords)
+    if (!word) {
+      showMessage('Tum kelimeleri zaten buldunuz!', 'info')
+      return null
+    }
+    if (!spendCoinsForHint(HINT_COST_REVEAL)) return null
 
-    const newFoundWords = [...foundWords, revealedWord]
+    const newFoundWords = [...foundWords, word]
     setFoundWords(newFoundWords)
-    recordWordFound(revealedWord, puzzle.pangrams.includes(revealedWord), false)
+    recordWordFound(word, puzzle.pangrams.includes(word), false)
+    fetchDefinition(word)
 
-    const points = calculateScore(revealedWord, puzzle.letters)
+    const points = Math.floor(calculateScore(word, puzzle.letters) / 2)
     setScore((prev) => prev + points)
     triggerScoreBump()
 
-    showMessage(`Ipucu: "${revealedWord}" açıldı! -${HINT_COST} jeton`, 'info')
+    showMessage(
+      `"${word}" açıldı! +${points} puan (yarı)`,
+      'info',
+    )
     playSound('success')
     vibrate(20)
 
@@ -444,13 +490,14 @@ export function useGame() {
         }
       }, 600)
     }
+
+    return word
   }, [
-    coins,
     puzzle,
     foundWords,
-    foundWordsSet,
     levelComplete,
     progress,
+    spendCoinsForHint,
     showMessage,
     triggerScoreBump,
   ])
@@ -516,7 +563,10 @@ export function useGame() {
     shuffleLetters,
     submitWord,
     reportLastRejectedWord,
-    useHint,
+    useLetterCountHint,
+    useFirstLetterHint,
+    useRevealHint,
+    freeHintAvailable,
     addCoins,
     goToLevel,
     showMessage,

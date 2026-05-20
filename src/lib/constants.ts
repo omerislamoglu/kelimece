@@ -6,7 +6,9 @@ export const PANGRAM_BONUS = 7
 export const COIN_PER_WORD = 10
 export const COIN_PER_PANGRAM = 20
 export const COIN_PER_BONUS = 5
-export const HINT_COST = 50
+export const HINT_COST_LETTER_COUNT = 20
+export const HINT_COST_FIRST_LETTER = 50
+export const HINT_COST_REVEAL = 100
 export const INITIAL_COINS = 100
 
 export const STORAGE_KEYS = {
