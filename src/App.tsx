@@ -19,6 +19,9 @@ const Settings = lazy(() => import('./components/screens/Settings'))
 const Tutorial = lazy(() => import('./components/screens/Tutorial'))
 const CoinShop = lazy(() => import('./components/screens/CoinShop'))
 const LevelMap = lazy(() => import('./components/screens/LevelMap'))
+const DailyChallenge = lazy(
+  () => import('./components/screens/DailyChallenge'),
+)
 
 function App() {
   const {
@@ -66,6 +69,7 @@ function App() {
   const [showHints, setShowHints] = useState(false)
   const [showShop, setShowShop] = useState(false)
   const [showMap, setShowMap] = useState(false)
+  const [showDaily, setShowDaily] = useState(false)
 
   function handleShowTutorial() {
     resetTutorial()
@@ -256,8 +260,13 @@ function App() {
             progress={progress}
             currentLevel={puzzle.level}
             onSelectLevel={goToLevel}
+            onOpenDaily={() => setShowDaily(true)}
             onClose={() => setShowMap(false)}
           />
+        )}
+
+        {showDaily && (
+          <DailyChallenge onClose={() => setShowDaily(false)} />
         )}
       </Suspense>
     </div>

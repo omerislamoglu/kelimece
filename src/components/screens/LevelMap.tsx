@@ -1,18 +1,90 @@
 import { useEffect, useState, useCallback, useRef } from 'react'
-import { X, Star, Lock, Check } from 'lucide-react'
+import { X, Star, Lock, Check, Flame, Sparkles, Clock } from 'lucide-react'
 import { TOTAL_LEVELS, type LevelProgress } from '../../lib/levels'
+import {
+  isDailyCompleted,
+  getDailyStats,
+  getToday,
+  secondsUntilMidnight,
+} from '../../lib/dailyPuzzle'
 
 interface LevelMapProps {
   progress: LevelProgress
   currentLevel: number
   onSelectLevel: (level: number) => void
+  onOpenDaily: () => void
   onClose: () => void
+}
+
+function DailyCTA({ onOpen }: { onOpen: () => void }) {
+  const today = getToday()
+  const done = isDailyCompleted(today)
+  const stats = getDailyStats()
+  const [countdown, setCountdown] = useState(secondsUntilMidnight)
+
+  useEffect(() => {
+    if (!done) return
+    const interval = setInterval(() => setCountdown(secondsUntilMidnight()), 1000)
+    return () => clearInterval(interval)
+  }, [done])
+
+  const h = Math.floor(countdown / 3600)
+  const m = Math.floor((countdown % 3600) / 60)
+
+  return (
+    <button
+      onClick={onOpen}
+      className={`mb-4 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all ${
+        done
+          ? 'bg-surface-100 dark:bg-surface-800'
+          : 'bg-gradient-to-r from-orange-500/10 to-yellow-500/10 ring-1 ring-orange-500/20 dark:from-orange-500/20 dark:to-yellow-500/20'
+      }`}
+    >
+      <div
+        className={`flex h-11 w-11 items-center justify-center rounded-xl ${
+          done
+            ? 'bg-success-500/10 text-success-500'
+            : 'bg-orange-500/10 text-orange-500'
+        }`}
+      >
+        {done ? (
+          <Check className="h-5 w-5" />
+        ) : (
+          <Sparkles className="h-5 w-5 animate-pulse" />
+        )}
+      </div>
+      <div className="flex-1 min-w-0">
+        <p className="text-sm font-bold text-surface-800 dark:text-surface-200">
+          Günün Bulmacası
+        </p>
+        {done ? (
+          <p className="flex items-center gap-1 text-xs text-surface-400">
+            <Clock className="h-3 w-3" />
+            Yeni bulmaca: {h}s {m}dk
+          </p>
+        ) : (
+          <p className="text-xs text-orange-600 dark:text-orange-400">
+            Bugünkü bulmacayı çöz!
+          </p>
+        )}
+      </div>
+      {stats.streak > 0 && (
+        <div className="flex items-center gap-1 rounded-full bg-orange-500/10 px-2 py-1">
+          <Flame className="h-3.5 w-3.5 text-orange-500" />
+          <span className="text-xs font-bold text-orange-600 dark:text-orange-400">
+            {stats.streak}
+          </span>
+        </div>
+      )}
+    </button>
+  )
 }
 
 export default function LevelMap({
   progress,
   currentLevel,
   onSelectLevel,
+  onOpenDaily,
   onClose,
 }: LevelMapProps) {
   const [visible, setVisible] = useState(false)
@@ -103,6 +175,7 @@ export default function LevelMap({
 
         {/* Map */}
         <div className="flex-1 overflow-y-auto px-5 py-6">
+          <DailyCTA onOpen={() => { onOpenDaily(); handleClose() }} />
           <div className="space-y-3">
             {rows.map((row, rowIdx) => (
               <div
