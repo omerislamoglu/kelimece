@@ -1,4 +1,8 @@
-import { ACHIEVEMENTS, ACHIEVEMENT_MAP, type Achievement } from '../data/achievements'
+import {
+  ACHIEVEMENTS,
+  ACHIEVEMENT_MAP,
+  type Achievement,
+} from '../data/achievements'
 import { getStats, type GameStats } from './stats'
 import { getReports } from './wordReports'
 
@@ -83,7 +87,7 @@ export function getProgress(
   const achievement = ACHIEVEMENT_MAP.get(id)
   if (!achievement) return { current: 0, target: 1 }
 
-  let current = 0
+  let current: number
 
   switch (id) {
     case 'first_word':
@@ -132,7 +136,10 @@ export function getProgress(
       current = 0
   }
 
-  return { current: Math.min(current, achievement.target), target: achievement.target }
+  return {
+    current: Math.min(current, achievement.target),
+    target: achievement.target,
+  }
 }
 
 // ── Check all achievements ─────────────────────────────────────────────────────

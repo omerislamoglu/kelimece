@@ -129,6 +129,7 @@ export default function HintsPanel({
 
         <button
           onClick={() => setResult(null)}
+          aria-label="Başka ipucu al"
           className="w-full rounded-xl bg-surface-100 py-2 text-xs font-semibold text-surface-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
         >
           Baska ipucu al
@@ -162,12 +163,14 @@ export default function HintsPanel({
         <div className="flex gap-2">
           <button
             onClick={() => setConfirmType(null)}
+            aria-label="İpucundan vazgeç"
             className="flex-1 rounded-xl bg-surface-100 py-2.5 text-sm font-semibold text-surface-600 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
           >
             Vazgec
           </button>
           <button
             onClick={handleConfirm}
+            aria-label={`${confirmLabel} ipucunu onayla`}
             className="flex-1 rounded-xl bg-primary-600 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 dark:bg-accent-500 dark:hover:bg-accent-600"
           >
             Devam
@@ -218,6 +221,7 @@ export default function HintsPanel({
             key={type}
             onClick={() => setConfirmType(type)}
             disabled={!canAfford}
+            aria-label={`${title} ipucunu seç`}
             className={`flex w-full items-center gap-3 rounded-xl px-3 py-3 text-left transition-all ${
               canAfford
                 ? 'bg-surface-100 hover:bg-surface-200 dark:bg-surface-800 dark:hover:bg-surface-700'
@@ -258,6 +262,7 @@ export default function HintsPanel({
       {!freeHintAvailable && coins < HINT_COST_LETTER_COUNT && (
         <button
           onClick={onOpenShop}
+          aria-label="Jeton satın al"
           className="flex w-full items-center justify-center gap-1 pt-1 text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-accent-400 dark:hover:text-accent-300"
         >
           <Coins className="h-3.5 w-3.5" />

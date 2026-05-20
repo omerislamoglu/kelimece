@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from 'react'
 import { X, Coins, Sparkles, Crown, Zap } from 'lucide-react'
 import { COIN_PACKAGES, type CoinPackage } from '../../lib/constants'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface CoinShopProps {
   coins: number
@@ -17,6 +18,7 @@ export default function CoinShop({
 }: CoinShopProps) {
   const [visible, setVisible] = useState(false)
   const [purchasing, setPurchasing] = useState<string | null>(null)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -60,6 +62,8 @@ export default function CoinShop({
       aria-label="Jeton Magazasi"
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`relative w-full max-w-sm rounded-2xl bg-surface-50 p-6 shadow-2xl transition-all duration-200 dark:bg-surface-900 ${
           visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
@@ -100,6 +104,7 @@ export default function CoinShop({
                 key={pkg.id}
                 onClick={() => handlePurchase(pkg)}
                 disabled={isPurchasing}
+                aria-label={`${pkg.coins} jeton paketini satın al`}
                 className={`relative flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98] disabled:opacity-70 ${
                   isBest
                     ? 'border-yellow-400 bg-yellow-500/5 hover:bg-yellow-500/10 dark:border-yellow-500/50'

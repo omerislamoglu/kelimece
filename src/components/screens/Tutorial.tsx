@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import { ChevronRight, ChevronLeft, X } from 'lucide-react'
 import { completeTutorial } from '../../lib/tutorial'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 // --- Mini harf grid (animasyonlu) ---
 
@@ -185,6 +186,7 @@ function Screen4({ onStart }: { onStart: () => void }) {
       </div>
       <button
         onClick={onStart}
+        aria-label="Bulmacaya başla"
         className="mt-2 rounded-2xl bg-primary-600 px-8 py-3.5 text-base font-semibold text-white shadow-lg shadow-primary-600/30 transition-colors hover:bg-primary-700 active:bg-primary-800 dark:bg-accent-500 dark:shadow-accent-500/20 dark:hover:bg-accent-400"
       >
         Bulmacaya Basla
@@ -206,6 +208,7 @@ export default function Tutorial({ onComplete }: TutorialProps) {
   const [direction, setDirection] = useState<'left' | 'right'>('left')
   const [animating, setAnimating] = useState(false)
   const [visible, setVisible] = useState(false)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
 
   // Touch/swipe
   const touchStartX = useRef(0)
@@ -258,6 +261,8 @@ export default function Tutorial({ onComplete }: TutorialProps) {
 
   return (
     <div
+      ref={dialogRef}
+      tabIndex={-1}
       className={`fixed inset-0 z-[70] flex flex-col bg-surface-50 transition-opacity duration-200 dark:bg-surface-950 ${
         visible ? 'opacity-100' : 'opacity-0'
       }`}
@@ -270,6 +275,7 @@ export default function Tutorial({ onComplete }: TutorialProps) {
         <div className="flex justify-end px-4 pt-4">
           <button
             onClick={finish}
+            aria-label="Öğreticiyi atla"
             className="flex items-center gap-1 rounded-lg px-3 py-1.5 text-sm font-medium text-surface-400 transition-colors hover:text-surface-600 dark:hover:text-surface-300"
           >
             Atla
@@ -295,6 +301,7 @@ export default function Tutorial({ onComplete }: TutorialProps) {
         <button
           onClick={() => goTo(page - 1)}
           disabled={page === 0}
+          aria-label="Önceki öğretici sayfası"
           className="flex h-10 w-10 items-center justify-center rounded-full text-surface-400 transition-colors hover:bg-surface-200 disabled:invisible dark:hover:bg-surface-800"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -318,6 +325,7 @@ export default function Tutorial({ onComplete }: TutorialProps) {
         {page < TOTAL_SCREENS - 1 ? (
           <button
             onClick={() => goTo(page + 1)}
+            aria-label="Sonraki öğretici sayfası"
             className="flex h-10 w-10 items-center justify-center rounded-full bg-primary-600 text-white shadow-md transition-colors hover:bg-primary-700 dark:bg-accent-500 dark:hover:bg-accent-400"
           >
             <ChevronRight className="h-5 w-5" />

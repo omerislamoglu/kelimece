@@ -16,6 +16,7 @@ export interface GameStats {
 }
 
 const STATS_KEY = 'kelimece-stats'
+const DEFINITIONS_CACHE_KEY = 'kelimece-definitions'
 
 const DEFAULT_STATS: GameStats = {
   levelsCompleted: 0,
@@ -38,7 +39,11 @@ export function getStats(): GameStats {
   try {
     const raw = localStorage.getItem(STATS_KEY)
     if (!raw) return { ...DEFAULT_STATS }
-    return { ...DEFAULT_STATS, ...JSON.parse(raw) }
+    const parsed = JSON.parse(raw)
+    if (parsed?.v === 2 && Array.isArray(parsed.n)) {
+      return inflateStats(parsed)
+    }
+    return { ...DEFAULT_STATS, ...parsed }
   } catch {
     return { ...DEFAULT_STATS }
   }
@@ -48,7 +53,54 @@ function saveStats(stats: GameStats): void {
   try {
     localStorage.setItem(STATS_KEY, JSON.stringify(stats))
   } catch {
-    // silently ignore
+    try {
+      localStorage.removeItem(DEFINITIONS_CACHE_KEY)
+      localStorage.setItem(STATS_KEY, JSON.stringify(compactStats(stats)))
+    } catch {
+      // Storage is still unavailable; keep the game usable.
+    }
+  }
+}
+
+function compactStats(stats: GameStats) {
+  return {
+    v: 2,
+    n: [
+      stats.levelsCompleted,
+      stats.totalStars,
+      stats.perfectLevels,
+      stats.totalWordsFound,
+      stats.totalBonusWords,
+      stats.totalPangrams,
+      stats.coinsEarned,
+      stats.coinsSpent,
+      stats.hintsUsed,
+      stats.playStreak,
+      stats.longestPlayStreak,
+    ],
+    s: [stats.longestWordFound, stats.firstPlayDate, stats.lastPlayDate],
+  }
+}
+
+function inflateStats(compact: { n: number[]; s?: string[] }): GameStats {
+  const [longestWordFound = '', firstPlayDate = '', lastPlayDate = ''] =
+    compact.s ?? []
+  return {
+    ...DEFAULT_STATS,
+    levelsCompleted: compact.n[0] ?? 0,
+    totalStars: compact.n[1] ?? 0,
+    perfectLevels: compact.n[2] ?? 0,
+    totalWordsFound: compact.n[3] ?? 0,
+    totalBonusWords: compact.n[4] ?? 0,
+    totalPangrams: compact.n[5] ?? 0,
+    coinsEarned: compact.n[6] ?? 0,
+    coinsSpent: compact.n[7] ?? 0,
+    hintsUsed: compact.n[8] ?? 0,
+    playStreak: compact.n[9] ?? 0,
+    longestPlayStreak: compact.n[10] ?? 0,
+    longestWordFound,
+    firstPlayDate,
+    lastPlayDate,
   }
 }
 

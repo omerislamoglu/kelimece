@@ -44314,6 +44314,6 @@ export const CURATED_WORDS: readonly string[] = [
   'şırıltı',
   'şırınga',
   'şıvgın',
-] as const;
+] as const
 
-export const CURATED_SET = new Set(CURATED_WORDS);
+export const CURATED_SET = new Set(CURATED_WORDS)

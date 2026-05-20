@@ -7,7 +7,10 @@ interface ShareButtonProps {
   totalWords: number
   stars: number
   score: number
-  onMessage: (text: string, type: 'success' | 'error' | 'info' | 'warning') => void
+  onMessage: (
+    text: string,
+    type: 'success' | 'error' | 'info' | 'warning',
+  ) => void
 }
 
 export default function ShareButton({
@@ -34,7 +37,7 @@ export default function ShareButton({
   return (
     <button
       onClick={handleShare}
-      aria-label="Sonucu paylas"
+      aria-label="Sonucu paylaş"
       className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition-colors hover:bg-primary-700 active:bg-primary-800"
     >
       <Share2 className="h-4 w-4" />

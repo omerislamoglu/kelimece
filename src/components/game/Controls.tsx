@@ -107,7 +107,7 @@ export default function Controls({
       <button
         type="button"
         onClick={onShuffle}
-        aria-label="Harfleri karistir"
+        aria-label="Harfleri karıştır"
         className="rounded-2xl bg-surface-100 p-3 text-surface-600
                    transition-all duration-150 hover:bg-surface-200
                    active:rotate-180 active:scale-95
@@ -119,7 +119,7 @@ export default function Controls({
       <button
         type="button"
         onClick={onSubmit}
-        aria-label="Kelimeyi gonder"
+        aria-label="Gonder, kelimeyi gönder"
         className="flex items-center gap-1.5 rounded-2xl bg-gradient-to-r from-primary-600 to-primary-500 px-5 py-3 text-sm font-bold
                    text-white shadow-lg shadow-primary-600/25
                    transition-all duration-150 hover:shadow-xl hover:shadow-primary-600/30 active:scale-95

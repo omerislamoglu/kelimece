@@ -69,7 +69,12 @@ function playNotes(notes: Note[], overlap = 0.8) {
   }
 }
 
-function playChord(freqs: number[], duration: number, gain: number, type: OscillatorType = 'sine') {
+function playChord(
+  freqs: number[],
+  duration: number,
+  gain: number,
+  type: OscillatorType = 'sine',
+) {
   if (!isSoundEnabled()) return
   try {
     const ctx = getCtx()
@@ -127,9 +132,7 @@ export function playPangram() {
 
 /** Low buzzer error — 220Hz square, 100ms */
 export function playError() {
-  playNotes([
-    { freq: 220, duration: 0.1, type: 'square', gain: 0.06 },
-  ])
+  playNotes([{ freq: 220, duration: 0.1, type: 'square', gain: 0.06 }])
 }
 
 /** Level complete fanfare — 4-note crescendo */

@@ -5,8 +5,7 @@ export function formatShareText(
   stars: number,
   score: number,
 ): string {
-  const starStr =
-    '★'.repeat(stars) + '☆'.repeat(3 - stars)
+  const starStr = '★'.repeat(stars) + '☆'.repeat(3 - stars)
 
   return [
     `Kelimece \u2022 B\u00F6l\u00FCm ${level}`,

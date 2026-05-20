@@ -8,6 +8,7 @@ import {
   setVibrationEnabled,
 } from '../../lib/sounds'
 import { STORAGE_KEYS } from '../../lib/constants'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface SettingsProps {
   theme: Theme
@@ -65,6 +66,7 @@ export default function Settings({
   const [visible, setVisible] = useState(false)
   const [sound, setSound] = useState(isSoundEnabled)
   const [vibration, setVibration] = useState(isVibrationEnabled)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
   const [autoDefs, setAutoDefs] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEYS.autoDefinitions) === 'true'
@@ -127,6 +129,8 @@ export default function Settings({
       aria-label="Ayarlar"
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`relative w-full max-w-sm rounded-2xl bg-surface-50 p-6 shadow-2xl transition-all duration-200 dark:bg-surface-900 ${
           visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
@@ -154,6 +158,7 @@ export default function Settings({
               <button
                 key={value}
                 onClick={() => onThemeChange(value)}
+                aria-label={`${label} temayı seç`}
                 className={`flex flex-col items-center gap-1.5 rounded-xl px-3 py-3 text-xs font-medium transition-all ${
                   theme === value
                     ? 'bg-primary-600 text-white shadow-md dark:bg-accent-500'
@@ -210,6 +215,7 @@ export default function Settings({
         <div className="mb-5 space-y-2">
           <button
             onClick={handleTutorial}
+            aria-label="Nasıl oynanır ekranını aç"
             className="w-full rounded-xl bg-surface-100 px-4 py-3 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
           >
             Nasil oynanir?
@@ -219,6 +225,7 @@ export default function Settings({
               handleClose()
               setTimeout(onShowStats, 250)
             }}
+            aria-label="İstatistikleri aç"
             className="w-full rounded-xl bg-surface-100 px-4 py-3 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
           >
             Istatistikler
@@ -228,6 +235,7 @@ export default function Settings({
               handleClose()
               setTimeout(onShowAchievements, 250)
             }}
+            aria-label="Başarıları aç"
             className="w-full rounded-xl bg-surface-100 px-4 py-3 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
           >
             Basarilar

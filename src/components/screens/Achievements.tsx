@@ -33,6 +33,7 @@ import {
   type AchievementProgress,
 } from '../../lib/achievements'
 import { getStats } from '../../lib/stats'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface AchievementsProps {
   onClose: () => void
@@ -68,6 +69,7 @@ type Filter = 'all' | 'unlocked' | 'locked'
 export default function Achievements({ onClose }: AchievementsProps) {
   const [visible, setVisible] = useState(false)
   const [filter, setFilter] = useState<Filter>('all')
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
 
   const stats = useMemo(() => getStats(), [])
   const unlockedIds = useMemo(() => getUnlockedIds(), [])
@@ -122,6 +124,8 @@ export default function Achievements({ onClose }: AchievementsProps) {
       aria-label="Başarılar"
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`mx-auto flex w-full max-w-lg flex-1 flex-col overflow-hidden bg-surface-50 transition-all duration-200 sm:my-4 sm:rounded-3xl dark:bg-surface-950 ${
           visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
@@ -156,14 +160,17 @@ export default function Achievements({ onClose }: AchievementsProps) {
 
           {/* Filters */}
           <div className="mt-3 flex gap-2">
-            {([
-              ['all', 'Tümü'],
-              ['unlocked', 'Açık'],
-              ['locked', 'Kilitli'],
-            ] as [Filter, string][]).map(([key, label]) => (
+            {(
+              [
+                ['all', 'Tümü'],
+                ['unlocked', 'Açık'],
+                ['locked', 'Kilitli'],
+              ] as [Filter, string][]
+            ).map(([key, label]) => (
               <button
                 key={key}
                 onClick={() => setFilter(key)}
+                aria-label={`${label} başarı filtresini seç`}
                 className={`rounded-lg px-3 py-1 text-xs font-semibold transition-colors ${
                   filter === key
                     ? 'bg-primary-600 text-white dark:bg-accent-500'
@@ -225,11 +232,7 @@ function AchievementCard({
             : 'bg-surface-200 text-surface-400 dark:bg-surface-700'
         }`}
       >
-        {isSecret ? (
-          <Lock className="h-5 w-5" />
-        ) : (
-          <Icon className="h-5 w-5" />
-        )}
+        {isSecret ? <Lock className="h-5 w-5" /> : <Icon className="h-5 w-5" />}
       </div>
 
       <div className="min-w-0 flex-1">

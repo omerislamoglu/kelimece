@@ -35,6 +35,7 @@ export default class ErrorBoundary extends Component<Props, State> {
           </p>
           <button
             onClick={this.handleRetry}
+            aria-label="Uygulamayı tekrar dene"
             className="inline-flex items-center gap-2 rounded-xl bg-primary-600 px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-700 active:bg-primary-800"
           >
             <RefreshCw className="h-4 w-4" />

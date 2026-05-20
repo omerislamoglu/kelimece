@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback } from 'react'
+import { memo, useState, useMemo, useCallback } from 'react'
 import { playLetterTap, vibrate } from '../../lib/sounds'
 
 interface LetterGridProps {
@@ -9,7 +9,7 @@ interface LetterGridProps {
 
 const ANGLES = [0, 60, 120, 180, 240, 300]
 
-function LetterButton({
+const LetterButton = memo(function LetterButton({
   letter,
   isCenter,
   disabled,
@@ -57,9 +57,9 @@ function LetterButton({
       {letter}
     </button>
   )
-}
+})
 
-export default function LetterGrid({
+export default memo(function LetterGrid({
   letters,
   currentInput,
   onLetterClick,
@@ -82,11 +82,18 @@ export default function LetterGrid({
     return counts
   }, [letters])
 
-  function isLetterDisabled(letter: string): boolean {
-    const used = usedCounts.get(letter) ?? 0
-    const available = availableCounts.get(letter) ?? 0
-    return used >= available
-  }
+  const isLetterDisabled = useCallback(
+    (letter: string): boolean => {
+      const used = usedCounts.get(letter) ?? 0
+      const available = availableCounts.get(letter) ?? 0
+      return used >= available
+    },
+    [availableCounts, usedCounts],
+  )
+
+  const handleCenterClick = useCallback(() => {
+    onLetterClick(letters[0])
+  }, [letters, onLetterClick])
 
   return (
     <div
@@ -100,7 +107,7 @@ export default function LetterGrid({
         letter={letters[0]}
         isCenter
         disabled={isLetterDisabled(letters[0])}
-        onClick={() => onLetterClick(letters[0])}
+        onClick={handleCenterClick}
         style={{
           left: '50%',
           top: '50%',
@@ -131,4 +138,4 @@ export default function LetterGrid({
       })}
     </div>
   )
-}
+})

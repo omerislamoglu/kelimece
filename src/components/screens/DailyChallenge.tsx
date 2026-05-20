@@ -13,6 +13,7 @@ import Controls from '../game/Controls'
 import FoundWords from '../game/FoundWords'
 import Toast from '../ui/Toast'
 import ShareButton from '../ShareButton'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface DailyChallengeProps {
   onClose: () => void
@@ -27,6 +28,7 @@ function formatCountdown(seconds: number): string {
 
 export default function DailyChallenge({ onClose }: DailyChallengeProps) {
   const [visible, setVisible] = useState(false)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
   const dailyStats = getDailyStats()
   const today = getToday()
 
@@ -75,9 +77,10 @@ export default function DailyChallenge({ onClose }: DailyChallengeProps) {
     return () => window.removeEventListener('keydown', onKey)
   }, [handleClose])
 
-  const targetProgress = puzzle.validWords.length > 0
-    ? Math.min(foundWords.length / puzzle.validWords.length, 1)
-    : 0
+  const targetProgress =
+    puzzle.validWords.length > 0
+      ? Math.min(foundWords.length / puzzle.validWords.length, 1)
+      : 0
 
   return (
     <div
@@ -89,6 +92,8 @@ export default function DailyChallenge({ onClose }: DailyChallengeProps) {
       aria-label="Günün Bulmacası"
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`mx-auto flex w-full max-w-lg flex-1 flex-col overflow-hidden bg-surface-50 transition-all duration-200 sm:my-4 sm:rounded-3xl dark:bg-surface-950 ${
           visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
@@ -132,11 +137,7 @@ export default function DailyChallenge({ onClose }: DailyChallengeProps) {
               <div
                 className={`absolute inset-y-0 left-0 rounded-full transition-all duration-500 ease-out ${
                   scoreBump ? 'animate-score-bump' : ''
-                } ${
-                  targetProgress >= 1
-                    ? 'bg-success-500'
-                    : 'bg-orange-500'
-                }`}
+                } ${targetProgress >= 1 ? 'bg-success-500' : 'bg-orange-500'}`}
                 style={{ width: `${targetProgress * 100}%` }}
               />
             </div>
@@ -196,9 +197,7 @@ export default function DailyChallenge({ onClose }: DailyChallengeProps) {
             <div className="flex items-center gap-2 rounded-2xl bg-surface-100 px-5 py-3 dark:bg-surface-800">
               <Clock className="h-4 w-4 text-surface-400" />
               <div>
-                <p className="text-xs text-surface-400">
-                  Yeni bulmaca:
-                </p>
+                <p className="text-xs text-surface-400">Yeni bulmaca:</p>
                 <p className="text-lg font-bold tabular-nums text-surface-700 dark:text-surface-300">
                   {formatCountdown(countdown)}
                 </p>
@@ -209,7 +208,14 @@ export default function DailyChallenge({ onClose }: DailyChallengeProps) {
               level={0}
               foundWords={foundWords}
               totalWords={puzzle.validWords.length}
-              stars={foundWords.length === puzzle.validWords.length ? 3 : foundWords.length >= Math.floor(puzzle.validWords.length * 0.7) ? 2 : 1}
+              stars={
+                foundWords.length === puzzle.validWords.length
+                  ? 3
+                  : foundWords.length >=
+                      Math.floor(puzzle.validWords.length * 0.7)
+                    ? 2
+                    : 1
+              }
               score={score}
               onMessage={showMessage}
             />

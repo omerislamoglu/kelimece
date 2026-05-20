@@ -1,0 +1,57 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630" role="img" aria-labelledby="title desc">
+  <title id="title">Kelimece</title>
+  <desc id="desc">Türkçe kelime bulmacası sosyal paylaşım görseli</desc>
+  <defs>
+    <linearGradient id="bg" x1="94" y1="64" x2="1074" y2="592" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#0f766e"/>
+      <stop offset=".58" stop-color="#14b8a6"/>
+      <stop offset="1" stop-color="#f59e0b"/>
+    </linearGradient>
+    <linearGradient id="tile" x1="279" y1="122" x2="495" y2="462" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#fffdf7"/>
+      <stop offset="1" stop-color="#f2ede7"/>
+    </linearGradient>
+    <filter id="shadow" x="120" y="54" width="480" height="524" color-interpolation-filters="sRGB" filterUnits="userSpaceOnUse">
+      <feDropShadow dx="0" dy="22" stdDeviation="22" flood-color="#134e4a" flood-opacity=".26"/>
+    </filter>
+  </defs>
+  <rect width="1200" height="630" fill="#f9f7f4"/>
+  <rect x="48" y="44" width="1104" height="542" rx="48" fill="url(#bg)"/>
+  <path d="M695 92h312c44 0 80 36 80 80v286c0 44-36 80-80 80H695c-44 0-80-36-80-80V172c0-44 36-80 80-80Z" fill="#fffdf7" opacity=".12"/>
+  <g filter="url(#shadow)" font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif" font-weight="900" text-anchor="middle">
+    <g transform="translate(352 136)">
+      <path d="M0-47 40.7-23.5v47L0 47l-40.7-23.5v-47L0-47Z" fill="#fffdf7" opacity=".93"/>
+      <text y="16" font-size="50" fill="#0f766e">E</text>
+    </g>
+    <g transform="translate(451 193)">
+      <path d="M0-47 40.7-23.5v47L0 47l-40.7-23.5v-47L0-47Z" fill="#fffdf7" opacity=".93"/>
+      <text y="16" font-size="50" fill="#0f766e">L</text>
+    </g>
+    <g transform="translate(451 307)">
+      <path d="M0-47 40.7-23.5v47L0 47l-40.7-23.5v-47L0-47Z" fill="#fffdf7" opacity=".93"/>
+      <text y="16" font-size="50" fill="#0f766e">İ</text>
+    </g>
+    <g transform="translate(352 364)">
+      <path d="M0-47 40.7-23.5v47L0 47l-40.7-23.5v-47L0-47Z" fill="#fffdf7" opacity=".93"/>
+      <text y="16" font-size="50" fill="#0f766e">M</text>
+    </g>
+    <g transform="translate(253 307)">
+      <path d="M0-47 40.7-23.5v47L0 47l-40.7-23.5v-47L0-47Z" fill="#fffdf7" opacity=".93"/>
+      <text y="16" font-size="50" fill="#0f766e">E</text>
+    </g>
+    <g transform="translate(253 193)">
+      <path d="M0-47 40.7-23.5v47L0 47l-40.7-23.5v-47L0-47Z" fill="#fffdf7" opacity=".93"/>
+      <text y="16" font-size="50" fill="#0f766e">C</text>
+    </g>
+    <g transform="translate(352 250)">
+      <path d="M0-70 60.6-35v70L0 70l-60.6-35v-70L0-70Z" fill="url(#tile)"/>
+      <path d="M0-70 60.6-35v70L0 70l-60.6-35v-70L0-70Z" fill="none" stroke="#0f766e" stroke-opacity=".16" stroke-width="3"/>
+      <text y="35" font-size="106" fill="#134e4a">K</text>
+    </g>
+  </g>
+  <g font-family="ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Arial, sans-serif">
+    <text x="648" y="264" font-size="104" font-weight="900" fill="#fffdf7">Kelimece</text>
+    <text x="654" y="321" font-size="34" font-weight="750" fill="#ccfbf1">Türkçe Kelime Bulmacası</text>
+    <text x="656" y="383" font-size="26" font-weight="650" fill="#fffdf7" opacity=".9">7 harften kelimeleri bul, tam kelimeyi yakala.</text>
+  </g>
+</svg>

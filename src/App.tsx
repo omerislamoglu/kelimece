@@ -9,9 +9,9 @@ import FoundWords from './components/game/FoundWords'
 import HintsPanel from './components/game/HintsPanel'
 import Toast from './components/ui/Toast'
 import Skeleton from './components/ui/Skeleton'
+import Logo from './components/Logo'
 import { isTutorialCompleted, resetTutorial } from './lib/tutorial'
 import { recordDailyPlay } from './lib/stats'
-import { loadSpellChecker } from './lib/spellchecker'
 
 const LevelComplete = lazy(() => import('./components/screens/LevelComplete'))
 const StatsPanel = lazy(() => import('./components/screens/StatsPanel'))
@@ -19,12 +19,8 @@ const Settings = lazy(() => import('./components/screens/Settings'))
 const Tutorial = lazy(() => import('./components/screens/Tutorial'))
 const CoinShop = lazy(() => import('./components/screens/CoinShop'))
 const LevelMap = lazy(() => import('./components/screens/LevelMap'))
-const DailyChallenge = lazy(
-  () => import('./components/screens/DailyChallenge'),
-)
-const Achievements = lazy(
-  () => import('./components/screens/Achievements'),
-)
+const DailyChallenge = lazy(() => import('./components/screens/DailyChallenge'))
+const Achievements = lazy(() => import('./components/screens/Achievements'))
 
 function App() {
   const {
@@ -62,10 +58,6 @@ function App() {
     recordDailyPlay()
   }, [])
 
-  useEffect(() => {
-    loadSpellChecker().catch(console.error)
-  }, [])
-
   const [showStats, setShowStats] = useState(false)
   const [showTutorial, setShowTutorial] = useState(() => !isTutorialCompleted())
   const [showSettings, setShowSettings] = useState(false)
@@ -98,11 +90,12 @@ function App() {
       <header className="px-5 pt-5 pb-3">
         <div className="mb-2 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <h1 className="text-2xl font-bold tracking-tight text-surface-900 dark:text-surface-100">
-              Kelimece
+            <h1>
+              <Logo />
             </h1>
             <button
               onClick={() => setShowMap(true)}
+              aria-label={`Bolum ${puzzle.level}, bölüm haritasını aç`}
               className="rounded-lg bg-primary-100 px-2 py-0.5 text-xs font-bold text-primary-700 transition-colors hover:bg-primary-600/20 dark:bg-accent-500/20 dark:text-accent-400 dark:hover:bg-accent-500/30"
             >
               Bolum {puzzle.level}
@@ -112,7 +105,7 @@ function App() {
             {/* Jeton */}
             <button
               onClick={() => setShowShop(true)}
-              aria-label="Jeton magazasi"
+              aria-label={`Jeton mağazasını aç, ${coins} jeton var`}
               className="flex items-center gap-1 rounded-full bg-yellow-500/10 px-2.5 py-1 transition-colors hover:bg-yellow-500/20"
             >
               <Coins className="h-4 w-4 text-yellow-500" />
@@ -157,7 +150,7 @@ function App() {
           </span>
           <button
             onClick={() => setShowHints(!showHints)}
-            aria-label="Ipuclari"
+            aria-label={showHints ? 'İpuçlarını kapat' : 'İpuçlarını aç'}
             className={`rounded-full p-1.5 transition-colors ${
               showHints
                 ? 'bg-primary-100 text-primary-600 dark:bg-accent-500/20 dark:text-accent-400'
@@ -270,9 +263,7 @@ function App() {
           />
         )}
 
-        {showDaily && (
-          <DailyChallenge onClose={() => setShowDaily(false)} />
-        )}
+        {showDaily && <DailyChallenge onClose={() => setShowDaily(false)} />}
 
         {showAchievements && (
           <Achievements onClose={() => setShowAchievements(false)} />

@@ -63,7 +63,7 @@ export default memo(function FoundWords({
         type="button"
         onClick={() => setIsOpen(!isOpen)}
         aria-expanded={isOpen}
-        aria-label={`Bulunan kelimeler: ${foundWords.length} / ${totalWords}`}
+        aria-label={`${foundWords.length} / ${totalWords} kelime, bulunan kelimeleri aç`}
         className="flex w-full items-center justify-between rounded-2xl
                    border border-surface-200 bg-primary-50/60 px-4 py-3
                    text-left backdrop-blur-sm transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]
@@ -147,6 +147,7 @@ export default memo(function FoundWords({
                             key={word}
                             type="button"
                             onClick={() => setSelectedWord(word)}
+                            aria-label={`${word} tanımını aç`}
                             className={`inline-block cursor-pointer rounded-full px-3 py-1 text-sm font-semibold transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:underline active:scale-95 ${
                               isNew ? 'animate-word-slide-in' : ''
                             } ${
@@ -178,6 +179,7 @@ export default memo(function FoundWords({
                             key={word}
                             type="button"
                             onClick={() => setSelectedWord(word)}
+                            aria-label={`${word} bonus kelimesinin tanımını aç`}
                             className={`inline-block cursor-pointer rounded-full bg-yellow-500/10 px-3 py-1 text-sm font-semibold text-yellow-600 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-yellow-500/20 hover:underline active:scale-95 dark:text-yellow-400 ${
                               word === newWord ? 'animate-word-slide-in' : ''
                             }`}
@@ -197,6 +199,7 @@ export default memo(function FoundWords({
 
       {selectedWord && (
         <WordDefinition
+          key={selectedWord}
           word={selectedWord}
           onClose={() => setSelectedWord(null)}
         />

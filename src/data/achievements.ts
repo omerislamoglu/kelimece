@@ -204,6 +204,4 @@ export const ACHIEVEMENTS: Achievement[] = [
   },
 ]
 
-export const ACHIEVEMENT_MAP = new Map(
-  ACHIEVEMENTS.map((a) => [a.id, a]),
-)
+export const ACHIEVEMENT_MAP = new Map(ACHIEVEMENTS.map((a) => [a.id, a]))

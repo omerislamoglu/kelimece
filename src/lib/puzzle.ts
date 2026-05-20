@@ -1,8 +1,4 @@
-import {
-  MIN_WORD_LENGTH,
-  PANGRAM_BONUS,
-  RANKS,
-} from './constants'
+import { MIN_WORD_LENGTH, PANGRAM_BONUS, RANKS } from './constants'
 
 export function calculateScore(word: string, letters: string[]): number {
   if (word.length < MIN_WORD_LENGTH) return 0

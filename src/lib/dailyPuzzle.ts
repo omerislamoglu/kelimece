@@ -173,16 +173,13 @@ export function getDailyStats(): DailyStats {
   }
 }
 
-export function recordDailyCompletion(
-  date: string,
-  isPerfect: boolean,
-): void {
+export function recordDailyCompletion(date: string, isPerfect: boolean): void {
   const stats = getDailyStats()
 
   // Already recorded this date
   if (stats.lastPlayedDate === date) {
     // Update perfect status if it improved
-    if (isPerfect && !wasPerfect(date)) {
+    if (isPerfect && !wasPerfect()) {
       stats.perfectDays += 1
     }
     saveDailyStats(stats)
@@ -209,7 +206,7 @@ export function recordDailyCompletion(
   saveDailyStats(stats)
 }
 
-function wasPerfect(_date: string): boolean {
+function wasPerfect(): boolean {
   // Simple check — we don't store per-day perfect status separately
   // This is a best-effort check
   return false
@@ -232,8 +229,18 @@ export function getToday(): Date {
 
 export function formatTurkishDate(date: Date): string {
   const months = [
-    'Ocak', 'Şubat', 'Mart', 'Nisan', 'Mayıs', 'Haziran',
-    'Temmuz', 'Ağustos', 'Eylül', 'Ekim', 'Kasım', 'Aralık',
+    'Ocak',
+    'Şubat',
+    'Mart',
+    'Nisan',
+    'Mayıs',
+    'Haziran',
+    'Temmuz',
+    'Ağustos',
+    'Eylül',
+    'Ekim',
+    'Kasım',
+    'Aralık',
   ]
   return `${date.getDate()} ${months[date.getMonth()]} ${date.getFullYear()}`
 }

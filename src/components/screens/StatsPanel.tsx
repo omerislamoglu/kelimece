@@ -13,6 +13,7 @@ import {
 } from 'lucide-react'
 import { getStats, type GameStats } from '../../lib/stats'
 import { loadProgress } from '../../lib/levels'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface StatsPanelProps {
   onClose: () => void
@@ -61,7 +62,8 @@ function StatCard({
     <div className="rounded-xl bg-surface-100 p-3 text-center dark:bg-surface-800">
       <Icon className="mx-auto mb-1 h-5 w-5 text-primary-500 dark:text-accent-400" />
       <div className="text-xl font-bold text-surface-900 dark:text-surface-100">
-        {stringValue ?? (value !== undefined ? <AnimatedNumber value={value} /> : 0)}
+        {stringValue ??
+          (value !== undefined ? <AnimatedNumber value={value} /> : 0)}
       </div>
       <div className="text-[11px] font-medium leading-tight text-surface-400">
         {label}
@@ -75,6 +77,7 @@ export default function StatsPanel({ onClose }: StatsPanelProps) {
   const [progress] = useState(() => loadProgress())
   const [visible, setVisible] = useState(false)
   const [activeTab, setActiveTab] = useState<Tab>('genel')
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -123,6 +126,8 @@ export default function StatsPanel({ onClose }: StatsPanelProps) {
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`relative w-full max-w-sm rounded-2xl bg-surface-50 p-6 shadow-2xl transition-all duration-200 dark:bg-surface-900 ${
           visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
@@ -145,6 +150,7 @@ export default function StatsPanel({ onClose }: StatsPanelProps) {
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
+              aria-label={`${tab.label} istatistik sekmesini aç`}
               className={`flex-1 rounded-lg px-3 py-1.5 text-xs font-semibold transition-all ${
                 activeTab === tab.key
                   ? 'bg-white text-primary-600 shadow-sm dark:bg-surface-700 dark:text-accent-400'
@@ -189,10 +195,13 @@ export default function StatsPanel({ onClose }: StatsPanelProps) {
                 icon={Calendar}
                 stringValue={
                   stats.firstPlayDate
-                    ? new Date(stats.firstPlayDate).toLocaleDateString('tr-TR', {
-                        day: 'numeric',
-                        month: 'short',
-                      })
+                    ? new Date(stats.firstPlayDate).toLocaleDateString(
+                        'tr-TR',
+                        {
+                          day: 'numeric',
+                          month: 'short',
+                        },
+                      )
                     : '-'
                 }
                 label="Ilk Oyun"

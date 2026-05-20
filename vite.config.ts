@@ -2,6 +2,7 @@ import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
 import tailwindcss from '@tailwindcss/vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { visualizer } from 'rollup-plugin-visualizer'
 
 export default defineConfig({
   plugins: [
@@ -13,32 +14,34 @@ export default defineConfig({
         'favicon.svg',
         'favicon-32x32.png',
         'favicon-16x16.png',
-        'apple-touch-icon.png',
+        'icons/apple-touch-icon.png',
+        'og-image.svg',
       ],
       manifest: {
-        name: 'Kelimece — Gunluk Turkce Kelime Bulmacasi',
+        name: 'Kelimece',
         short_name: 'Kelimece',
         description:
-          'Her gun yeni bir bulmaca. 7 harften mumkun oldugunca cok kelime bul.',
-        theme_color: '#4f46e5',
-        background_color: '#f8fafc',
+          'Her gün yeni bir bulmaca. 7 harften mümkün olduğunca çok Türkçe kelime bul.',
+        theme_color: '#0d9488',
+        background_color: '#f9f7f4',
         display: 'standalone',
         orientation: 'portrait',
+        lang: 'tr',
         scope: '/',
         start_url: '/',
         icons: [
           {
-            src: '/icon-192x192.png',
+            src: '/icons/icon-192x192.png',
             sizes: '192x192',
             type: 'image/png',
           },
           {
-            src: '/icon-512x512.png',
+            src: '/icons/icon-512x512.png',
             sizes: '512x512',
             type: 'image/png',
           },
           {
-            src: '/icon-maskable-512x512.png',
+            src: '/icons/icon-maskable-512x512.png',
             sizes: '512x512',
             type: 'image/png',
             purpose: 'maskable',
@@ -46,7 +49,11 @@ export default defineConfig({
         ],
       },
       workbox: {
-        globPatterns: ['**/*.{js,css,html,svg,png,woff2}'],
+        globPatterns: ['**/*.{js,css,html,svg,png,woff2,aff,dic}'],
+        globIgnores: ['stats.html'],
+        maximumFileSizeToCacheInBytes: 40 * 1024 * 1024,
+        navigateFallback: '/index.html',
+        cleanupOutdatedCaches: true,
         runtimeCaching: [
           {
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,
@@ -79,5 +86,28 @@ export default defineConfig({
         ],
       },
     }),
+    visualizer({
+      filename: 'dist/stats.html',
+      gzipSize: true,
+      brotliSize: true,
+      template: 'treemap',
+    }),
   ],
+  build: {
+    rollupOptions: {
+      output: {
+        manualChunks(id) {
+          if (
+            id.includes('/src/data/levels') ||
+            id.includes('/src/lib/levels')
+          ) {
+            return 'levels'
+          }
+          if (id.includes('/src/data/words-extended')) {
+            return 'words-extended'
+          }
+        },
+      },
+    },
+  },
 })

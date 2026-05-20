@@ -11,13 +11,9 @@ import {
 } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
 import { isAcceptedWord, normalizeWord } from '../lib/dictionary'
+import { isSpellCheckerReady, loadSpellChecker } from '../lib/spellchecker'
 import { reportWord } from '../lib/wordReports'
 import { fetchDefinition } from '../lib/definitions'
-import {
-  checkAchievements,
-  unlockAchievement,
-  recordNoHintLevel,
-} from '../lib/achievements'
 import {
   COIN_PER_BONUS,
   HINT_COST_LETTER_COUNT,
@@ -198,7 +194,9 @@ export function useGame() {
 
   const hintsUsedThisLevel = useRef(false)
 
-  const processAchievements = useCallback(() => {
+  const processAchievements = useCallback(async () => {
+    const { checkAchievements, unlockAchievement } =
+      await import('../lib/achievements')
     const newIds = checkAchievements()
     for (const id of newIds) {
       const achievement = unlockAchievement(id)
@@ -244,7 +242,7 @@ export function useGame() {
 
   const lastRejectedWordRef = useRef<string | null>(null)
 
-  const submitWord = useCallback(() => {
+  const submitWord = useCallback(async () => {
     const word = normalizeWord(currentInput)
     setCurrentInput('')
 
@@ -266,9 +264,7 @@ export function useGame() {
     }
 
     // 3) Invalid character not in puzzle
-    const invalidChar = [...word].find(
-      (ch) => !puzzle.letters.includes(ch),
-    )
+    const invalidChar = [...word].find((ch) => !puzzle.letters.includes(ch))
     if (invalidChar) {
       showMessage(
         `Bu harf bulmacada yok: ${invalidChar.toLocaleUpperCase('tr-TR')}`,
@@ -351,7 +347,9 @@ export function useGame() {
           if (!progress.completedLevels.includes(puzzle.level)) {
             recordLevelComplete(stars)
             if (!hintsUsedThisLevel.current) {
-              recordNoHintLevel(puzzle.level)
+              void import('../lib/achievements').then(({ recordNoHintLevel }) =>
+                recordNoHintLevel(puzzle.level),
+              )
             }
             processAchievements()
           }
@@ -361,6 +359,19 @@ export function useGame() {
     }
 
     // 6) Bonus word (accepted by hunspell / user dict but not a target)
+    if (!isAcceptedWord(word) && !isSpellCheckerReady()) {
+      try {
+        await loadSpellChecker()
+      } catch {
+        showMessage(
+          navigator.onLine
+            ? 'Sözlük yüklenemedi, temel sözlükle devam'
+            : 'Bağlantı yok, offline moda geçildi',
+          'warning',
+        )
+      }
+    }
+
     if (isAcceptedWord(word)) {
       setBonusWords((prev) => [...prev, word])
       setCoins((prev) => prev + COIN_PER_BONUS)
@@ -495,10 +506,7 @@ export function useGame() {
     setScore((prev) => prev + points)
     triggerScoreBump()
 
-    showMessage(
-      `"${word}" açıldı! +${points} puan (yarı)`,
-      'info',
-    )
+    showMessage(`"${word}" açıldı! +${points} puan (yarı)`, 'info')
     playSuccess()
     vibrate(50)
 

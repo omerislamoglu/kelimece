@@ -3,6 +3,7 @@ import { Star, ChevronRight, Coins } from 'lucide-react'
 import { calculateStars, type LevelPuzzle } from '../../lib/levels'
 import { playLevelComplete, playCoin, vibrate } from '../../lib/sounds'
 import ShareButton from '../ShareButton'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface LevelCompleteProps {
   puzzle: LevelPuzzle
@@ -10,7 +11,10 @@ interface LevelCompleteProps {
   score: number
   onNextLevel: () => void
   onClose: () => void
-  onMessage: (text: string, type: 'success' | 'error' | 'info' | 'warning') => void
+  onMessage: (
+    text: string,
+    type: 'success' | 'error' | 'info' | 'warning',
+  ) => void
 }
 
 function useCountUp(target: number, duration = 800, delay = 400) {
@@ -46,6 +50,7 @@ export default function LevelComplete({
   const [starsRevealed, setStarsRevealed] = useState(0)
   const [coinFlies, setCoinFlies] = useState<number[]>([])
   const coinTargetRef = useRef<HTMLDivElement>(null)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
 
   const stars = calculateStars(
     foundWords.length,
@@ -68,10 +73,13 @@ export default function LevelComplete({
     const timers: ReturnType<typeof setTimeout>[] = []
     for (let i = 1; i <= stars; i++) {
       timers.push(
-        setTimeout(() => {
-          setStarsRevealed(i)
-          vibrate(30)
-        }, 600 + i * 300),
+        setTimeout(
+          () => {
+            setStarsRevealed(i)
+            vibrate(30)
+          },
+          600 + i * 300,
+        ),
       )
     }
     return () => timers.forEach(clearTimeout)
@@ -83,10 +91,13 @@ export default function LevelComplete({
     const timers: ReturnType<typeof setTimeout>[] = []
     for (let i = 0; i < count; i++) {
       timers.push(
-        setTimeout(() => {
-          setCoinFlies((prev) => [...prev, Date.now() + i])
-          playCoin()
-        }, 1400 + i * 100),
+        setTimeout(
+          () => {
+            setCoinFlies((prev) => [...prev, Date.now() + i])
+            playCoin()
+          },
+          1400 + i * 100,
+        ),
       )
     }
     return () => timers.forEach(clearTimeout)
@@ -137,6 +148,8 @@ export default function LevelComplete({
       }}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`relative w-full max-w-sm rounded-2xl bg-surface-50 p-6 shadow-2xl transition-all duration-250 ease-[cubic-bezier(0.4,0,0.2,1)] dark:bg-surface-900 ${
           visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
@@ -147,10 +160,12 @@ export default function LevelComplete({
             <div
               key={id}
               className="absolute left-1/2 top-1/2 animate-coin-fly"
-              style={{
-                '--fly-x': '0px',
-                '--fly-y': '-120px',
-              } as React.CSSProperties}
+              style={
+                {
+                  '--fly-x': '0px',
+                  '--fly-y': '-120px',
+                } as React.CSSProperties
+              }
             >
               <Coins className="h-5 w-5 text-yellow-500" />
             </div>
@@ -218,6 +233,7 @@ export default function LevelComplete({
         {/* Sonraki Bolum butonu */}
         <button
           onClick={handleNextLevel}
+          aria-label="Sonraki bölüme geç"
           className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-5 py-3.5 text-base font-bold text-white shadow-lg shadow-primary-600/30 transition-all duration-150 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-primary-700 hover:shadow-xl active:scale-[0.98] dark:bg-accent-500 dark:shadow-accent-500/30 dark:hover:bg-accent-400"
         >
           Sonraki Bolum

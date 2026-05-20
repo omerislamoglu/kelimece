@@ -7,6 +7,7 @@ import {
   getToday,
   secondsUntilMidnight,
 } from '../../lib/dailyPuzzle'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface LevelMapProps {
   progress: LevelProgress
@@ -24,7 +25,10 @@ function DailyCTA({ onOpen }: { onOpen: () => void }) {
 
   useEffect(() => {
     if (!done) return
-    const interval = setInterval(() => setCountdown(secondsUntilMidnight()), 1000)
+    const interval = setInterval(
+      () => setCountdown(secondsUntilMidnight()),
+      1000,
+    )
     return () => clearInterval(interval)
   }, [done])
 
@@ -34,6 +38,7 @@ function DailyCTA({ onOpen }: { onOpen: () => void }) {
   return (
     <button
       onClick={onOpen}
+      aria-label="Günün bulmacasını aç"
       className={`mb-4 flex w-full items-center gap-3 rounded-2xl px-4 py-3.5 text-left transition-all ${
         done
           ? 'bg-surface-100 dark:bg-surface-800'
@@ -89,6 +94,7 @@ export default function LevelMap({
 }: LevelMapProps) {
   const [visible, setVisible] = useState(false)
   const currentRef = useRef<HTMLButtonElement>(null)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
   const completedSet = new Set(progress.completedLevels)
 
   useEffect(() => {
@@ -150,6 +156,8 @@ export default function LevelMap({
       aria-label="Bolum Haritasi"
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`mx-auto flex w-full max-w-lg flex-1 flex-col overflow-hidden bg-surface-50 transition-all duration-200 sm:my-4 sm:rounded-3xl dark:bg-surface-950 ${
           visible ? 'scale-100 opacity-100' : 'scale-95 opacity-0'
         }`}
@@ -175,7 +183,12 @@ export default function LevelMap({
 
         {/* Map */}
         <div className="flex-1 overflow-y-auto px-5 py-6">
-          <DailyCTA onOpen={() => { onOpenDaily(); handleClose() }} />
+          <DailyCTA
+            onOpen={() => {
+              onOpenDaily()
+              handleClose()
+            }}
+          />
           <div className="space-y-3">
             {rows.map((row, rowIdx) => (
               <div
@@ -194,6 +207,11 @@ export default function LevelMap({
                       ref={isCurrent ? currentRef : undefined}
                       onClick={() => handleSelect(level)}
                       disabled={isLocked}
+                      aria-label={
+                        isLocked
+                          ? `Bölüm ${level} kilitli`
+                          : `Bölüm ${level} seç`
+                      }
                       className={`
                         relative flex h-14 w-14 flex-col items-center justify-center rounded-2xl
                         text-sm font-bold transition-all duration-150

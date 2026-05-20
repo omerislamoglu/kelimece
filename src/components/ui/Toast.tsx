@@ -67,11 +67,13 @@ export default function Toast({ message, onReport }: ToastProps) {
         <span>{current.text}</span>
         {current.reportable && onReport && visible && (
           <button
+            type="button"
             onClick={(e) => {
               e.stopPropagation()
               onReport()
               setVisible(false)
             }}
+            aria-label="Kelimeyi bildir"
             className="pointer-events-auto rounded-lg bg-white/20 px-2.5 py-1 text-xs font-semibold transition-colors hover:bg-white/30"
           >
             Bildir

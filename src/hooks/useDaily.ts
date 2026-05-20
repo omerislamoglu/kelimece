@@ -3,6 +3,7 @@ import { calculateScore } from '../lib/puzzle'
 import { playSound, vibrate } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
 import { isAcceptedWord, normalizeWord } from '../lib/dictionary'
+import { isSpellCheckerReady, loadSpellChecker } from '../lib/spellchecker'
 import { fetchDefinition } from '../lib/definitions'
 import { COIN_PER_BONUS } from '../lib/constants'
 import type { MessageType, InputFeedback } from './useGame'
@@ -110,7 +111,7 @@ export function useDaily() {
     vibrate(10)
   }, [])
 
-  const submitWord = useCallback(() => {
+  const submitWord = useCallback(async () => {
     const word = normalizeWord(currentInput)
     setCurrentInput('')
 
@@ -129,9 +130,7 @@ export function useDaily() {
       return
     }
 
-    const invalidChar = [...word].find(
-      (ch) => !puzzle.letters.includes(ch),
-    )
+    const invalidChar = [...word].find((ch) => !puzzle.letters.includes(ch))
     if (invalidChar) {
       showMessage(
         `Bu harf bulmacada yok: ${invalidChar.toLocaleUpperCase('tr-TR')}`,
@@ -185,13 +184,25 @@ export function useDaily() {
       if (newFoundWords.length >= puzzle.validWords.length && !completed) {
         setTimeout(() => {
           setCompleted(true)
-          const isPerfect =
-            newFoundWords.length === puzzle.validWords.length
+          const isPerfect = newFoundWords.length === puzzle.validWords.length
           recordDailyCompletion(dateStr, isPerfect)
           fireAllFoundConfetti()
         }, 600)
       }
       return
+    }
+
+    if (!isAcceptedWord(word) && !isSpellCheckerReady()) {
+      try {
+        await loadSpellChecker()
+      } catch {
+        showMessage(
+          navigator.onLine
+            ? 'Sözlük yüklenemedi, temel sözlükle devam'
+            : 'Bağlantı yok, offline moda geçildi',
+          'warning',
+        )
+      }
     }
 
     if (isAcceptedWord(word)) {

@@ -1,6 +1,10 @@
 import { useEffect, useState, useCallback } from 'react'
 import { X } from 'lucide-react'
-import { fetchDefinition, type WordDefinition as Def } from '../../lib/definitions'
+import {
+  fetchDefinition,
+  type WordDefinition as Def,
+} from '../../lib/definitions'
+import { useFocusTrap } from '../../hooks/useFocusTrap'
 
 interface WordDefinitionProps {
   word: string
@@ -11,6 +15,7 @@ export default function WordDefinition({ word, onClose }: WordDefinitionProps) {
   const [def, setDef] = useState<Def | null>(null)
   const [loading, setLoading] = useState(true)
   const [visible, setVisible] = useState(false)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -18,7 +23,6 @@ export default function WordDefinition({ word, onClose }: WordDefinitionProps) {
 
   useEffect(() => {
     let cancelled = false
-    setLoading(true)
     fetchDefinition(word).then((result) => {
       if (cancelled) return
       setDef(result)
@@ -55,6 +59,8 @@ export default function WordDefinition({ word, onClose }: WordDefinitionProps) {
       aria-label={`${word} tanımı`}
     >
       <div
+        ref={dialogRef}
+        tabIndex={-1}
         className={`relative w-full max-w-sm bg-surface-50 shadow-2xl transition-all duration-200 dark:bg-surface-900
           rounded-t-3xl sm:rounded-2xl
           ${visible ? 'translate-y-0 opacity-100' : 'translate-y-8 opacity-0 sm:translate-y-0 sm:scale-95'}`}

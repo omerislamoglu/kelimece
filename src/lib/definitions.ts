@@ -23,7 +23,15 @@ function saveToCache(def: WordDefinition): void {
     cache[def.word] = def
     localStorage.setItem(CACHE_KEY, JSON.stringify(cache))
   } catch {
-    // quota exceeded — ignore
+    try {
+      const entries = Object.entries(loadCache()).slice(-40)
+      localStorage.setItem(
+        CACHE_KEY,
+        JSON.stringify(Object.fromEntries([...entries, [def.word, def]])),
+      )
+    } catch {
+      // quota exceeded — ignore
+    }
   }
 }
 
