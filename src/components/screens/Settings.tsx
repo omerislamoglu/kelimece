@@ -14,6 +14,7 @@ interface SettingsProps {
   onThemeChange: (theme: Theme) => void
   onShowTutorial: () => void
   onShowStats: () => void
+  onShowAchievements: () => void
   onClose: () => void
 }
 
@@ -58,6 +59,7 @@ export default function Settings({
   onThemeChange,
   onShowTutorial,
   onShowStats,
+  onShowAchievements,
   onClose,
 }: SettingsProps) {
   const [visible, setVisible] = useState(false)
@@ -220,6 +222,15 @@ export default function Settings({
             className="w-full rounded-xl bg-surface-100 px-4 py-3 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
           >
             Istatistikler
+          </button>
+          <button
+            onClick={() => {
+              handleClose()
+              setTimeout(onShowAchievements, 250)
+            }}
+            className="w-full rounded-xl bg-surface-100 px-4 py-3 text-sm font-medium text-surface-700 transition-colors hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700"
+          >
+            Basarilar
           </button>
         </div>
 

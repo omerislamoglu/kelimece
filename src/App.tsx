@@ -22,6 +22,9 @@ const LevelMap = lazy(() => import('./components/screens/LevelMap'))
 const DailyChallenge = lazy(
   () => import('./components/screens/DailyChallenge'),
 )
+const Achievements = lazy(
+  () => import('./components/screens/Achievements'),
+)
 
 function App() {
   const {
@@ -70,6 +73,7 @@ function App() {
   const [showShop, setShowShop] = useState(false)
   const [showMap, setShowMap] = useState(false)
   const [showDaily, setShowDaily] = useState(false)
+  const [showAchievements, setShowAchievements] = useState(false)
 
   function handleShowTutorial() {
     resetTutorial()
@@ -241,6 +245,7 @@ function App() {
             onThemeChange={setTheme}
             onShowTutorial={handleShowTutorial}
             onShowStats={() => setShowStats(true)}
+            onShowAchievements={() => setShowAchievements(true)}
             onClose={() => setShowSettings(false)}
           />
         )}
@@ -267,6 +272,10 @@ function App() {
 
         {showDaily && (
           <DailyChallenge onClose={() => setShowDaily(false)} />
+        )}
+
+        {showAchievements && (
+          <Achievements onClose={() => setShowAchievements(false)} />
         )}
       </Suspense>
     </div>

@@ -6,6 +6,11 @@ import { isAcceptedWord, normalizeWord } from '../lib/dictionary'
 import { reportWord } from '../lib/wordReports'
 import { fetchDefinition } from '../lib/definitions'
 import {
+  checkAchievements,
+  unlockAchievement,
+  recordNoHintLevel,
+} from '../lib/achievements'
+import {
   COIN_PER_BONUS,
   HINT_COST_LETTER_COUNT,
   HINT_COST_FIRST_LETTER,
@@ -183,6 +188,26 @@ export function useGame() {
     setTimeout(() => setScoreBump(false), 300)
   }, [])
 
+  const hintsUsedThisLevel = useRef(false)
+
+  const processAchievements = useCallback(() => {
+    const newIds = checkAchievements()
+    for (const id of newIds) {
+      const achievement = unlockAchievement(id)
+      if (achievement) {
+        setCoins((prev) => prev + achievement.reward)
+        recordCoinsEarned(achievement.reward)
+        setTimeout(() => {
+          showMessage(
+            `Başarı: ${achievement.title}! +${achievement.reward} jeton`,
+            'success',
+          )
+          playSound('pangram')
+        }, 800)
+      }
+    }
+  }, [showMessage])
+
   const addLetter = useCallback((letter: string) => {
     setCurrentInput((prev) => prev + letter)
     playSound('click')
@@ -275,6 +300,7 @@ export function useGame() {
 
       recordWordFound(word, isPangram, false)
       fetchDefinition(word)
+      processAchievements()
 
       if (isPangram) {
         showMessage(`Tam Kelime! +${points} puan`, 'success')
@@ -316,6 +342,10 @@ export function useGame() {
           fireAllFoundConfetti()
           if (!progress.completedLevels.includes(puzzle.level)) {
             recordLevelComplete(stars)
+            if (!hintsUsedThisLevel.current) {
+              recordNoHintLevel(puzzle.level)
+            }
+            processAchievements()
           }
         }, 600)
       }
@@ -333,6 +363,7 @@ export function useGame() {
       triggerFeedback('bonus')
       playSound('success')
       vibrate(20)
+      processAchievements()
       return
     }
 
@@ -353,6 +384,7 @@ export function useGame() {
     showMessage,
     triggerFeedback,
     triggerScoreBump,
+    processAchievements,
   ])
 
   const reportLastRejectedWord = useCallback(() => {
@@ -397,6 +429,7 @@ export function useGame() {
 
   const spendCoinsForHint = useCallback(
     (cost: number): boolean => {
+      hintsUsedThisLevel.current = true
       if (freeHintAvailable) {
         consumeFreeHint()
         showMessage('Günlük ücretsiz ipucu kullanıldı!', 'info')
@@ -522,6 +555,7 @@ export function useGame() {
     setScore(0)
     setCurrentInput('')
     setLevelComplete(false)
+    hintsUsedThisLevel.current = false
     clearLevelState()
   }, [progress])
 
