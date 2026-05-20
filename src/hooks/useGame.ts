@@ -1,6 +1,14 @@
 import { useState, useCallback, useEffect, useMemo, useRef } from 'react'
 import { calculateScore } from '../lib/puzzle'
-import { playSound, vibrate } from '../lib/sounds'
+import {
+  playLetterTap,
+  playSuccess,
+  playPangram,
+  playError,
+  playCoin,
+  playAchievement,
+  vibrate,
+} from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
 import { isAcceptedWord, normalizeWord } from '../lib/dictionary'
 import { reportWord } from '../lib/wordReports'
@@ -202,7 +210,8 @@ export function useGame() {
             `Başarı: ${achievement.title}! +${achievement.reward} jeton`,
             'success',
           )
-          playSound('pangram')
+          playAchievement()
+          vibrate([50, 30, 50, 30, 50])
         }, 800)
       }
     }
@@ -210,8 +219,7 @@ export function useGame() {
 
   const addLetter = useCallback((letter: string) => {
     setCurrentInput((prev) => prev + letter)
-    playSound('click')
-    vibrate(10)
+    // Sound + vibration handled in LetterGrid for immediate feedback
   }, [])
 
   const removeLetter = useCallback(() => {
@@ -230,7 +238,7 @@ export function useGame() {
       ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
     }
     setPuzzle({ ...puzzle, letters: [center, ...shuffled] })
-    playSound('click')
+    playLetterTap()
     vibrate(10)
   }, [puzzle])
 
@@ -244,8 +252,8 @@ export function useGame() {
     if (word.length < 4) {
       showMessage('En az 4 harf gerekli', 'warning')
       triggerFeedback('warning')
-      playSound('error')
-      vibrate([30, 50, 30])
+      playError()
+      vibrate(30)
       return
     }
 
@@ -253,7 +261,7 @@ export function useGame() {
     if (foundWordsSet.has(word) || bonusWordsSet.has(word)) {
       showMessage('Bu kelimeyi zaten buldun', 'info')
       triggerFeedback('info')
-      playSound('error')
+      playError()
       return
     }
 
@@ -267,8 +275,8 @@ export function useGame() {
         'error',
       )
       triggerFeedback('error')
-      playSound('error')
-      vibrate([30, 50, 30])
+      playError()
+      vibrate(30)
       return
     }
 
@@ -281,8 +289,8 @@ export function useGame() {
         showMessage('Ortadaki harf kelimede olmalı', 'warning')
         triggerFeedback('warning')
       }
-      playSound('error')
-      vibrate([30, 50, 30])
+      playError()
+      vibrate(30)
       return
     }
 
@@ -305,14 +313,14 @@ export function useGame() {
       if (isPangram) {
         showMessage(`Tam Kelime! +${points} puan`, 'success')
         triggerFeedback('pangram')
-        playSound('pangram')
-        vibrate([50, 30, 50, 30, 80])
+        playPangram()
+        vibrate([100, 50, 100])
         firePangramConfetti()
       } else {
         showMessage(`+${points} puan`, 'success')
         triggerFeedback('success')
-        playSound('success')
-        vibrate(20)
+        playSuccess()
+        vibrate(50)
       }
 
       // Level complete check
@@ -361,8 +369,9 @@ export function useGame() {
       fetchDefinition(word)
       showMessage(`Bonus kelime! +${COIN_PER_BONUS} jeton`, 'success')
       triggerFeedback('bonus')
-      playSound('success')
-      vibrate(20)
+      playSuccess()
+      playCoin()
+      vibrate(50)
       processAchievements()
       return
     }
@@ -371,8 +380,8 @@ export function useGame() {
     lastRejectedWordRef.current = word
     showMessage('Sözlükte bulunamadı', 'error', true)
     triggerFeedback('error')
-    playSound('error')
-    vibrate([30, 50, 30])
+    playError()
+    vibrate(30)
   }, [
     puzzle,
     currentInput,
@@ -421,8 +430,8 @@ export function useGame() {
     recordCoinsEarned(10)
     lastRejectedWordRef.current = null
     showMessage('Bildirildi, teşekkürler! +10 jeton', 'success')
-    playSound('success')
-    vibrate(20)
+    playCoin()
+    vibrate(50)
   }, [puzzle.level, showMessage])
 
   const freeHintAvailable = isFreeHintAvailable()
@@ -437,7 +446,7 @@ export function useGame() {
       }
       if (coins < cost) {
         showMessage(`Yetersiz jeton (${cost} jeton gerekli)`, 'error')
-        playSound('error')
+        playError()
         return false
       }
       setCoins((prev) => prev - cost)
@@ -454,7 +463,7 @@ export function useGame() {
       showMessage('Tum kelimeleri zaten buldunuz!', 'info')
       return null
     }
-    playSound('success')
+    playSuccess()
     return result
   }, [puzzle, foundWords, spendCoinsForHint, showMessage])
 
@@ -465,7 +474,7 @@ export function useGame() {
       showMessage('Tum kelimeleri zaten buldunuz!', 'info')
       return null
     }
-    playSound('success')
+    playSuccess()
     return result
   }, [puzzle, foundWords, spendCoinsForHint, showMessage])
 
@@ -490,8 +499,8 @@ export function useGame() {
       `"${word}" açıldı! +${points} puan (yarı)`,
       'info',
     )
-    playSound('success')
-    vibrate(20)
+    playSuccess()
+    vibrate(50)
 
     // Level complete check after hint
     if (newFoundWords.length >= puzzle.targetWordCount && !levelComplete) {

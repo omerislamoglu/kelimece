@@ -1,4 +1,5 @@
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useCallback } from 'react'
+import { playLetterTap, vibrate } from '../../lib/sounds'
 
 interface LetterGridProps {
   letters: string[]
@@ -23,12 +24,14 @@ function LetterButton({
 }) {
   const [pressed, setPressed] = useState(false)
 
-  function handleClick() {
+  const handleClick = useCallback(() => {
     if (disabled) return
     setPressed(true)
+    playLetterTap()
+    vibrate(10)
     onClick()
     setTimeout(() => setPressed(false), 150)
-  }
+  }, [disabled, onClick])
 
   return (
     <button
@@ -39,8 +42,9 @@ function LetterButton({
       className={`
         absolute flex items-center justify-center rounded-2xl
         font-extrabold uppercase select-none
-        transition-all duration-150 focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none
-        ${pressed ? 'scale-90' : 'scale-100'}
+        transition-all duration-150 ease-[cubic-bezier(0.4,0,0.2,1)]
+        focus-visible:ring-2 focus-visible:ring-primary-500 focus-visible:outline-none
+        ${pressed ? 'animate-button-bounce' : ''}
         ${disabled ? 'opacity-25 cursor-default' : 'cursor-pointer active:scale-90'}
         ${
           isCenter

@@ -1,4 +1,4 @@
-import { useState, useMemo, memo } from 'react'
+import { useState, useMemo, useRef, useEffect, memo } from 'react'
 import { ChevronDown, X } from 'lucide-react'
 import WordDefinition from './WordDefinition'
 
@@ -17,6 +17,33 @@ export default memo(function FoundWords({
 }: FoundWordsProps) {
   const [isOpen, setIsOpen] = useState(false)
   const [selectedWord, setSelectedWord] = useState<string | null>(null)
+
+  // Track which word was just added to animate it
+  const prevCountRef = useRef(foundWords.length)
+  const prevBonusCountRef = useRef(bonusWords.length)
+  const [newWord, setNewWord] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (foundWords.length > prevCountRef.current) {
+      const latest = foundWords[foundWords.length - 1]
+      setNewWord(latest)
+      const t = setTimeout(() => setNewWord(null), 350)
+      prevCountRef.current = foundWords.length
+      return () => clearTimeout(t)
+    }
+    prevCountRef.current = foundWords.length
+  }, [foundWords])
+
+  useEffect(() => {
+    if (bonusWords.length > prevBonusCountRef.current) {
+      const latest = bonusWords[bonusWords.length - 1]
+      setNewWord(latest)
+      const t = setTimeout(() => setNewWord(null), 350)
+      prevBonusCountRef.current = bonusWords.length
+      return () => clearTimeout(t)
+    }
+    prevBonusCountRef.current = bonusWords.length
+  }, [bonusWords])
 
   const sortedWords = useMemo(
     () => [...foundWords].sort((a, b) => a.localeCompare(b, 'tr')),
@@ -39,7 +66,7 @@ export default memo(function FoundWords({
         aria-label={`Bulunan kelimeler: ${foundWords.length} / ${totalWords}`}
         className="flex w-full items-center justify-between rounded-2xl
                    border border-surface-200 bg-primary-50/60 px-4 py-3
-                   text-left backdrop-blur-sm transition-all duration-200
+                   text-left backdrop-blur-sm transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)]
                    hover:bg-primary-50 hover:shadow-sm
                    dark:border-surface-700 dark:bg-surface-800/80
                    dark:hover:bg-surface-800"
@@ -112,20 +139,26 @@ export default memo(function FoundWords({
                   {/* Target words */}
                   {sortedWords.length > 0 && (
                     <div className="flex flex-wrap gap-2 pb-2">
-                      {sortedWords.map((word) => (
-                        <button
-                          key={word}
-                          type="button"
-                          onClick={() => setSelectedWord(word)}
-                          className={`animate-fade-in inline-block cursor-pointer rounded-full px-3 py-1 text-sm font-semibold transition-colors hover:underline active:scale-95 ${
-                            pangramSet.has(word)
-                              ? 'bg-primary-600/10 text-primary-600 ring-1 ring-primary-500/30 hover:bg-primary-600/20 dark:bg-accent-500/10 dark:text-accent-400 dark:ring-accent-500/30 dark:hover:bg-accent-500/20'
-                              : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700'
-                          }`}
-                        >
-                          {word}
-                        </button>
-                      ))}
+                      {sortedWords.map((word) => {
+                        const isPangram = pangramSet.has(word)
+                        const isNew = word === newWord
+                        return (
+                          <button
+                            key={word}
+                            type="button"
+                            onClick={() => setSelectedWord(word)}
+                            className={`inline-block cursor-pointer rounded-full px-3 py-1 text-sm font-semibold transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:underline active:scale-95 ${
+                              isNew ? 'animate-word-slide-in' : ''
+                            } ${
+                              isPangram
+                                ? 'animate-pangram-glow bg-primary-600/10 text-primary-600 ring-1 ring-primary-500/30 hover:bg-primary-600/20 dark:bg-accent-500/10 dark:text-accent-400 dark:ring-accent-500/30 dark:hover:bg-accent-500/20'
+                                : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700'
+                            }`}
+                          >
+                            {word}
+                          </button>
+                        )
+                      })}
                     </div>
                   )}
 
@@ -145,7 +178,9 @@ export default memo(function FoundWords({
                             key={word}
                             type="button"
                             onClick={() => setSelectedWord(word)}
-                            className="animate-fade-in inline-block cursor-pointer rounded-full bg-yellow-500/10 px-3 py-1 text-sm font-semibold text-yellow-600 transition-colors hover:bg-yellow-500/20 hover:underline active:scale-95 dark:text-yellow-400"
+                            className={`inline-block cursor-pointer rounded-full bg-yellow-500/10 px-3 py-1 text-sm font-semibold text-yellow-600 transition-all duration-200 ease-[cubic-bezier(0.4,0,0.2,1)] hover:bg-yellow-500/20 hover:underline active:scale-95 dark:text-yellow-400 ${
+                              word === newWord ? 'animate-word-slide-in' : ''
+                            }`}
                           >
                             {word}
                           </button>

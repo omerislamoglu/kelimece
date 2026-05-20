@@ -1,4 +1,4 @@
-import { memo } from 'react'
+import { memo, useRef, useEffect, useState } from 'react'
 import type { InputFeedback } from '../../hooks/useGame'
 
 interface InputDisplayProps {
@@ -12,6 +12,22 @@ export default memo(function InputDisplay({
   centerLetter,
   feedback,
 }: InputDisplayProps) {
+  const prevLengthRef = useRef(currentInput.length)
+  const [animatingIdx, setAnimatingIdx] = useState<number | null>(null)
+
+  useEffect(() => {
+    const prevLen = prevLengthRef.current
+    const curLen = currentInput.length
+    prevLengthRef.current = curLen
+
+    if (curLen > prevLen) {
+      // New letter added — animate it
+      setAnimatingIdx(curLen - 1)
+      const t = setTimeout(() => setAnimatingIdx(null), 150)
+      return () => clearTimeout(t)
+    }
+  }, [currentInput])
+
   const feedbackClass =
     feedback === 'error'
       ? 'animate-shake animate-flash-error'
@@ -27,7 +43,7 @@ export default memo(function InputDisplay({
 
   return (
     <div
-      className={`flex min-h-[3.5rem] items-center justify-center rounded-xl border-b-2 border-surface-200 px-2 pb-1 dark:border-surface-700 ${feedbackClass}`}
+      className={`flex min-h-[3.5rem] items-center justify-center rounded-xl border-b-2 border-surface-200 px-2 pb-1 transition-colors duration-150 dark:border-surface-700 ${feedbackClass}`}
       role="status"
       aria-live="polite"
       aria-label={
@@ -41,7 +57,9 @@ export default memo(function InputDisplay({
           {[...currentInput].map((letter, i) => (
             <span
               key={i}
-              className={`animate-letter-pop text-[clamp(1.75rem,6vw,2.5rem)] font-bold uppercase tracking-wide ${
+              className={`text-[clamp(1.75rem,6vw,2.5rem)] font-bold uppercase tracking-wide ${
+                animatingIdx === i ? 'animate-letter-slide-in' : ''
+              } ${
                 letter === centerLetter
                   ? 'text-primary-600 dark:text-accent-400'
                   : 'text-surface-900 dark:text-surface-100'
