@@ -15,9 +15,15 @@ export default memo(function InputDisplay({
   const feedbackClass =
     feedback === 'error'
       ? 'animate-shake animate-flash-error'
-      : feedback === 'success' || feedback === 'pangram' || feedback === 'bonus'
-        ? 'animate-flash-success animate-slide-out-up'
-        : ''
+      : feedback === 'warning'
+        ? 'animate-flash-warning'
+        : feedback === 'info'
+          ? 'animate-border-pulse'
+          : feedback === 'success' ||
+              feedback === 'pangram' ||
+              feedback === 'bonus'
+            ? 'animate-flash-success animate-slide-out-up'
+            : ''
 
   return (
     <div

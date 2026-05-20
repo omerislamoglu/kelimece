@@ -7,7 +7,7 @@ interface ShareButtonProps {
   totalWords: number
   stars: number
   score: number
-  onMessage: (text: string, type: 'success' | 'error' | 'info') => void
+  onMessage: (text: string, type: 'success' | 'error' | 'info' | 'warning') => void
 }
 
 export default function ShareButton({

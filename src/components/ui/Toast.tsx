@@ -1,10 +1,18 @@
 import { useEffect, useState } from 'react'
+import type { MessageType } from '../../hooks/useGame'
 
-interface ToastProps {
-  message: { text: string; type: 'success' | 'error' | 'info' } | null
+interface ToastMessage {
+  text: string
+  type: MessageType
+  reportable?: boolean
 }
 
-export default function Toast({ message }: ToastProps) {
+interface ToastProps {
+  message: ToastMessage | null
+  onReport?: () => void
+}
+
+export default function Toast({ message, onReport }: ToastProps) {
   const [visible, setVisible] = useState(false)
   const [current, setCurrent] = useState(message)
   const [prevMessage, setPrevMessage] = useState(message)
@@ -21,14 +29,25 @@ export default function Toast({ message }: ToastProps) {
   // Auto-hide after delay
   useEffect(() => {
     if (!visible) return
-    const timer = setTimeout(() => setVisible(false), 1700)
+    const delay = current?.reportable ? 4000 : 1700
+    const timer = setTimeout(() => setVisible(false), delay)
     return () => clearTimeout(timer)
-  }, [visible])
+  }, [visible, current?.reportable])
 
   if (!current) return null
 
   const isTamKelime =
     current.type === 'success' && current.text.startsWith('Tam Kelime')
+
+  const bgClass = isTamKelime
+    ? 'bg-gradient-to-r from-primary-600 to-accent-500 text-white shadow-primary-600/40 ring-2 ring-accent-500/20'
+    : current.type === 'success'
+      ? 'bg-success-500 text-white'
+      : current.type === 'error'
+        ? 'bg-error-500 text-white'
+        : current.type === 'warning'
+          ? 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-200'
+          : 'bg-surface-800 text-surface-100 dark:bg-surface-200 dark:text-surface-900'
 
   return (
     <div
@@ -43,17 +62,21 @@ export default function Toast({ message }: ToastProps) {
         }`}
     >
       <div
-        className={`rounded-2xl px-5 py-2.5 text-center text-sm font-bold shadow-lg ${
-          isTamKelime
-            ? 'bg-gradient-to-r from-primary-600 to-accent-500 text-white shadow-primary-600/40 ring-2 ring-accent-500/20'
-            : current.type === 'success'
-              ? 'bg-success-500 text-white'
-              : current.type === 'error'
-                ? 'bg-error-500 text-white'
-                : 'bg-surface-800 text-surface-100 dark:bg-surface-200 dark:text-surface-900'
-        }`}
+        className={`flex items-center gap-2 rounded-2xl px-5 py-2.5 text-center text-sm font-bold shadow-lg ${bgClass}`}
       >
-        {current.text}
+        <span>{current.text}</span>
+        {current.reportable && onReport && visible && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation()
+              onReport()
+              setVisible(false)
+            }}
+            className="pointer-events-auto rounded-lg bg-white/20 px-2.5 py-1 text-xs font-semibold transition-colors hover:bg-white/30"
+          >
+            Bildir
+          </button>
+        )}
       </div>
     </div>
   )

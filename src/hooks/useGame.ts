@@ -3,6 +3,7 @@ import { calculateScore } from '../lib/puzzle'
 import { playSound, vibrate } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
 import { isAcceptedWord, normalizeWord } from '../lib/dictionary'
+import { reportWord } from '../lib/wordReports'
 import {
   COIN_PER_BONUS,
   HINT_COST,
@@ -24,12 +25,22 @@ import {
   type LevelProgress,
 } from '../lib/levels'
 
+export type MessageType = 'success' | 'error' | 'info' | 'warning'
+
 interface GameMessage {
   text: string
-  type: 'success' | 'error' | 'info'
+  type: MessageType
+  reportable?: boolean
 }
 
-export type InputFeedback = 'success' | 'error' | 'pangram' | 'bonus' | null
+export type InputFeedback =
+  | 'success'
+  | 'error'
+  | 'warning'
+  | 'info'
+  | 'pangram'
+  | 'bonus'
+  | null
 
 interface LevelState {
   level: number
@@ -142,10 +153,13 @@ export function useGame() {
     saveCoins(coins)
   }, [coins])
 
-  const showMessage = useCallback((text: string, type: GameMessage['type']) => {
-    setMessage({ text, type })
-    setTimeout(() => setMessage(null), 2000)
-  }, [])
+  const showMessage = useCallback(
+    (text: string, type: GameMessage['type'], reportable?: boolean) => {
+      setMessage({ text, type, reportable })
+      setTimeout(() => setMessage(null), reportable ? 4000 : 2000)
+    },
+    [],
+  )
 
   const triggerFeedback = useCallback((type: InputFeedback) => {
     setInputFeedback(type)
@@ -183,39 +197,62 @@ export function useGame() {
     vibrate(10)
   }, [puzzle])
 
+  const lastRejectedWordRef = useRef<string | null>(null)
+
   const submitWord = useCallback(() => {
     const word = normalizeWord(currentInput)
     setCurrentInput('')
 
+    // 1) Too short
     if (word.length < 4) {
-      showMessage('En az 4 harf gerekli', 'error')
+      showMessage('En az 4 harf gerekli', 'warning')
+      triggerFeedback('warning')
+      playSound('error')
+      vibrate([30, 50, 30])
+      return
+    }
+
+    // 2) Already found?
+    if (foundWordsSet.has(word) || bonusWordsSet.has(word)) {
+      showMessage('Bu kelimeyi zaten buldun', 'info')
+      triggerFeedback('info')
+      playSound('error')
+      return
+    }
+
+    // 3) Invalid character not in puzzle
+    const invalidChar = [...word].find(
+      (ch) => !puzzle.letters.includes(ch),
+    )
+    if (invalidChar) {
+      showMessage(
+        `Bu harf bulmacada yok: ${invalidChar.toLocaleUpperCase('tr-TR')}`,
+        'error',
+      )
       triggerFeedback('error')
       playSound('error')
       vibrate([30, 50, 30])
       return
     }
 
-    // Already found as target word?
-    if (foundWordsSet.has(word)) {
-      showMessage('Bu kelimeyi zaten buldunuz', 'info')
-      triggerFeedback('error')
+    // 4) Missing center letter
+    if (!word.includes(puzzle.centerLetter)) {
+      if (isAcceptedWord(word)) {
+        showMessage('Doğru kelime, ama ortadaki harf yok', 'info')
+        triggerFeedback('info')
+      } else {
+        showMessage('Ortadaki harf kelimede olmalı', 'warning')
+        triggerFeedback('warning')
+      }
       playSound('error')
+      vibrate([30, 50, 30])
       return
     }
 
-    // Already found as bonus word?
-    if (bonusWordsSet.has(word)) {
-      showMessage('Bu kelimeyi zaten buldunuz', 'info')
-      triggerFeedback('error')
-      playSound('error')
-      return
-    }
-
-    // Is it a target word? (must include center letter — already enforced by validWords)
+    // 5) Target word
     const isTargetWord = puzzle.validWords.includes(word)
 
     if (isTargetWord) {
-      // Normal target word flow — puan ver ama jeton verme
       const points = calculateScore(word, puzzle.letters)
       const isPangram = puzzle.pangrams.includes(word)
 
@@ -272,9 +309,8 @@ export function useGame() {
       return
     }
 
-    // Not a target word — is it a real Turkish word in the dictionary?
+    // 6) Bonus word (accepted by hunspell / user dict but not a target)
     if (isAcceptedWord(word)) {
-      // Bonus word!
       setBonusWords((prev) => [...prev, word])
       setCoins((prev) => prev + COIN_PER_BONUS)
       recordWordFound(word, false, true)
@@ -286,8 +322,9 @@ export function useGame() {
       return
     }
 
-    // Not a real word at all
-    showMessage('Gecerli bir kelime degil', 'error')
+    // 7) Not found in any dictionary — reportable
+    lastRejectedWordRef.current = word
+    showMessage('Sözlükte bulunamadı', 'error', true)
     triggerFeedback('error')
     playSound('error')
     vibrate([30, 50, 30])
@@ -303,6 +340,44 @@ export function useGame() {
     triggerFeedback,
     triggerScoreBump,
   ])
+
+  const reportLastRejectedWord = useCallback(() => {
+    const word = lastRejectedWordRef.current
+    if (!word) return
+
+    // Daily limit: max 3 reports
+    const todayKey = new Date().toISOString().slice(0, 10)
+    const REPORT_COUNT_KEY = 'kelimece-report-count'
+    try {
+      const raw = localStorage.getItem(REPORT_COUNT_KEY)
+      const data = raw ? JSON.parse(raw) : { date: '', count: 0 }
+      if (data.date === todayKey && data.count >= 3) {
+        showMessage('Günlük bildirim hakkın doldu (3/3)', 'info')
+        return
+      }
+      const newCount = data.date === todayKey ? data.count + 1 : 1
+      localStorage.setItem(
+        REPORT_COUNT_KEY,
+        JSON.stringify({ date: todayKey, count: newCount }),
+      )
+    } catch {
+      // continue anyway
+    }
+
+    reportWord({
+      word,
+      context: 'rejected_but_valid',
+      level: puzzle.level,
+      timestamp: Date.now(),
+    })
+
+    setCoins((prev) => prev + 10)
+    recordCoinsEarned(10)
+    lastRejectedWordRef.current = null
+    showMessage('Bildirildi, teşekkürler! +10 jeton', 'success')
+    playSound('success')
+    vibrate(20)
+  }, [puzzle.level, showMessage])
 
   const useHint = useCallback(() => {
     if (coins < HINT_COST) {
@@ -437,6 +512,7 @@ export function useGame() {
     clearInput,
     shuffleLetters,
     submitWord,
+    reportLastRejectedWord,
     useHint,
     addCoins,
     goToLevel,

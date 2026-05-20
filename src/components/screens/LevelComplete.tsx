@@ -9,7 +9,7 @@ interface LevelCompleteProps {
   score: number
   onNextLevel: () => void
   onClose: () => void
-  onMessage: (text: string, type: 'success' | 'error' | 'info') => void
+  onMessage: (text: string, type: 'success' | 'error' | 'info' | 'warning') => void
 }
 
 export default function LevelComplete({

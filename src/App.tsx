@@ -39,6 +39,7 @@ function App() {
     clearInput,
     shuffleLetters,
     submitWord,
+    reportLastRejectedWord,
     useHint,
     addCoins,
     goToLevel,
@@ -82,7 +83,7 @@ function App() {
         paddingBottom: 'var(--safe-area-bottom)',
       }}
     >
-      <Toast message={message} />
+      <Toast message={message} onReport={reportLastRejectedWord} />
 
       {/* Header */}
       <header className="px-5 pt-5 pb-3">
