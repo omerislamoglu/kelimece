@@ -17,6 +17,7 @@ export const STORAGE_KEYS = {
   vibration: 'kelimece-vibration',
   tutorial: 'kelimece-tutorial-completed',
   coins: 'kelimece-coins',
+  autoDefinitions: 'kelimece-auto-definitions',
 } as const
 
 export const COIN_PACKAGES = [

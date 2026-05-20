@@ -7,6 +7,7 @@ import {
   isVibrationEnabled,
   setVibrationEnabled,
 } from '../../lib/sounds'
+import { STORAGE_KEYS } from '../../lib/constants'
 
 interface SettingsProps {
   theme: Theme
@@ -62,6 +63,13 @@ export default function Settings({
   const [visible, setVisible] = useState(false)
   const [sound, setSound] = useState(isSoundEnabled)
   const [vibration, setVibration] = useState(isVibrationEnabled)
+  const [autoDefs, setAutoDefs] = useState(() => {
+    try {
+      return localStorage.getItem(STORAGE_KEYS.autoDefinitions) === 'true'
+    } catch {
+      return false
+    }
+  })
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -88,6 +96,15 @@ export default function Settings({
   function handleVibrationToggle(v: boolean) {
     setVibration(v)
     setVibrationEnabled(v)
+  }
+
+  function handleAutoDefsToggle(v: boolean) {
+    setAutoDefs(v)
+    try {
+      localStorage.setItem(STORAGE_KEYS.autoDefinitions, String(v))
+    } catch {
+      // ignore
+    }
   }
 
   function handleTutorial() {
@@ -168,6 +185,21 @@ export default function Settings({
               enabled={vibration}
               onChange={handleVibrationToggle}
               label="Titresim"
+            />
+          </div>
+          <div className="flex items-center justify-between">
+            <div>
+              <span className="text-sm font-medium text-surface-700 dark:text-surface-300">
+                Tanimlari otomatik goster
+              </span>
+              <p className="text-xs text-surface-400">
+                Kelime bulununca anlamini goster
+              </p>
+            </div>
+            <Toggle
+              enabled={autoDefs}
+              onChange={handleAutoDefsToggle}
+              label="Tanimlari otomatik goster"
             />
           </div>
         </div>

@@ -4,6 +4,7 @@ import { playSound, vibrate } from '../lib/sounds'
 import { firePangramConfetti, fireAllFoundConfetti } from '../lib/confetti'
 import { isAcceptedWord, normalizeWord } from '../lib/dictionary'
 import { reportWord } from '../lib/wordReports'
+import { fetchDefinition } from '../lib/definitions'
 import {
   COIN_PER_BONUS,
   HINT_COST,
@@ -262,6 +263,7 @@ export function useGame() {
       triggerScoreBump()
 
       recordWordFound(word, isPangram, false)
+      fetchDefinition(word)
 
       if (isPangram) {
         showMessage(`Tam Kelime! +${points} puan`, 'success')
@@ -315,6 +317,7 @@ export function useGame() {
       setCoins((prev) => prev + COIN_PER_BONUS)
       recordWordFound(word, false, true)
       recordCoinsEarned(COIN_PER_BONUS)
+      fetchDefinition(word)
       showMessage(`Bonus kelime! +${COIN_PER_BONUS} jeton`, 'success')
       triggerFeedback('bonus')
       playSound('success')

@@ -1,5 +1,6 @@
 import { useState, useMemo, memo } from 'react'
 import { ChevronDown, X } from 'lucide-react'
+import WordDefinition from './WordDefinition'
 
 interface FoundWordsProps {
   foundWords: string[]
@@ -15,6 +16,7 @@ export default memo(function FoundWords({
   pangrams,
 }: FoundWordsProps) {
   const [isOpen, setIsOpen] = useState(false)
+  const [selectedWord, setSelectedWord] = useState<string | null>(null)
 
   const sortedWords = useMemo(
     () => [...foundWords].sort((a, b) => a.localeCompare(b, 'tr')),
@@ -111,16 +113,18 @@ export default memo(function FoundWords({
                   {sortedWords.length > 0 && (
                     <div className="flex flex-wrap gap-2 pb-2">
                       {sortedWords.map((word) => (
-                        <span
+                        <button
                           key={word}
-                          className={`animate-fade-in inline-block rounded-full px-3 py-1 text-sm font-semibold ${
+                          type="button"
+                          onClick={() => setSelectedWord(word)}
+                          className={`animate-fade-in inline-block cursor-pointer rounded-full px-3 py-1 text-sm font-semibold transition-colors hover:underline active:scale-95 ${
                             pangramSet.has(word)
-                              ? 'bg-primary-600/10 text-primary-600 ring-1 ring-primary-500/30 dark:bg-accent-500/10 dark:text-accent-400 dark:ring-accent-500/30'
-                              : 'bg-surface-100 text-surface-700 dark:bg-surface-800 dark:text-surface-300'
+                              ? 'bg-primary-600/10 text-primary-600 ring-1 ring-primary-500/30 hover:bg-primary-600/20 dark:bg-accent-500/10 dark:text-accent-400 dark:ring-accent-500/30 dark:hover:bg-accent-500/20'
+                              : 'bg-surface-100 text-surface-700 hover:bg-surface-200 dark:bg-surface-800 dark:text-surface-300 dark:hover:bg-surface-700'
                           }`}
                         >
                           {word}
-                        </span>
+                        </button>
                       ))}
                     </div>
                   )}
@@ -137,12 +141,14 @@ export default memo(function FoundWords({
                       </div>
                       <div className="flex flex-wrap gap-2 pb-2">
                         {sortedBonus.map((word) => (
-                          <span
+                          <button
                             key={word}
-                            className="animate-fade-in inline-block rounded-full bg-yellow-500/10 px-3 py-1 text-sm font-semibold text-yellow-600 dark:text-yellow-400"
+                            type="button"
+                            onClick={() => setSelectedWord(word)}
+                            className="animate-fade-in inline-block cursor-pointer rounded-full bg-yellow-500/10 px-3 py-1 text-sm font-semibold text-yellow-600 transition-colors hover:bg-yellow-500/20 hover:underline active:scale-95 dark:text-yellow-400"
                           >
                             {word}
-                          </span>
+                          </button>
                         ))}
                       </div>
                     </>
@@ -152,6 +158,13 @@ export default memo(function FoundWords({
             </div>
           </div>
         </>
+      )}
+
+      {selectedWord && (
+        <WordDefinition
+          word={selectedWord}
+          onClose={() => setSelectedWord(null)}
+        />
       )}
     </>
   )
