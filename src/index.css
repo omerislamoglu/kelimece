@@ -302,34 +302,12 @@
   border-radius: 4px;
 }
 
-html {
-  background-color: var(--color-surface-50);
-}
-
-.dark html,
-html:where(.dark) {
-  background-color: var(--color-surface-950);
-}
-
 body {
   background-color: var(--color-surface-50);
-  min-height: 100dvh;
   -webkit-tap-highlight-color: transparent;
-  padding-top: env(safe-area-inset-top, 0px);
-  padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 .dark body,
 body:where(.dark *) {
-  background-color: var(--color-surface-950);
-}
-
-#root {
-  background-color: var(--color-surface-50);
-  min-height: 100dvh;
-}
-
-.dark #root,
-#root:where(.dark *) {
   background-color: var(--color-surface-950);
 }

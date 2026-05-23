@@ -12,12 +12,12 @@
     <!-- Viewport & Mobile -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
-    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="default" />
     <meta name="apple-mobile-web-app-title" content="Kelimece" />
     <meta name="mobile-web-app-capable" content="yes" />
 
     <!-- Theme Color (light & dark) -->
-    <meta name="theme-color" content="#f9f7f4" media="(prefers-color-scheme: light)" />
+    <meta name="theme-color" content="#0d9488" media="(prefers-color-scheme: light)" />
     <meta name="theme-color" content="#0c0a09" media="(prefers-color-scheme: dark)" />
 
     <!-- SEO -->
@@ -47,7 +47,7 @@
   <body>
     <script>
       // Prevent flash of wrong theme on initial load
-      (function(){var t=localStorage.getItem('kelimece-theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);var bg=d?'#0c0a09':'#f9f7f4';document.documentElement.style.backgroundColor=bg;document.body.style.backgroundColor=bg})()
+      (function(){var t=localStorage.getItem('kelimece-theme');var d=t==='dark'||(t!=='light'&&matchMedia('(prefers-color-scheme:dark)').matches);document.documentElement.classList.toggle('dark',d);document.body.style.backgroundColor=d?'#020617':'#f8fafc'})()
     </script>
     <div id="root"></div>
     <script type="module" src="/src/main.tsx"></script>
