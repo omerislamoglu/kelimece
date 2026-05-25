@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import { Star, ChevronRight, Coins } from 'lucide-react'
 import { calculateStars, type LevelPuzzle } from '../../lib/levels'
 import { playLevelComplete, playCoin, vibrate } from '../../lib/sounds'
+import { showInterstitialIfReady } from '../../lib/adService'
 import ShareButton from '../ShareButton'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 
@@ -108,12 +109,19 @@ export default function LevelComplete({
     setTimeout(onClose, 200)
   }, [onClose])
 
-  const handleNextLevel = useCallback(() => {
+  const handleNextLevel = useCallback(async () => {
     setShowingAd(true)
-    setTimeout(() => {
-      setShowingAd(false)
-      onNextLevel()
-    }, 1500)
+    try {
+      const adShown = await showInterstitialIfReady()
+      if (!adShown) {
+        // Reklam gosterilmediyse kisa bekleme
+        await new Promise((r) => setTimeout(r, 300))
+      }
+    } catch {
+      // Reklam hatasi — devam et
+    }
+    setShowingAd(false)
+    onNextLevel()
   }, [onNextLevel])
 
   useEffect(() => {

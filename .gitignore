@@ -30,3 +30,8 @@ dist-ssr
 
 # PWA
 dev-dist
+
+# Capacitor iOS
+ios/App/App/public
+ios/App/Pods
+ios/App/output

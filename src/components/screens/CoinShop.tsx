@@ -1,7 +1,15 @@
-import { useEffect, useState, useCallback } from 'react'
-import { X, Coins, Sparkles, Crown, Zap } from 'lucide-react'
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react'
+import { X, Coins, Sparkles, Crown, Zap, Play } from 'lucide-react'
 import { COIN_PACKAGES, type CoinPackage } from '../../lib/constants'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
+import { useAuth } from '../../contexts/AuthContext'
+import {
+  showRewardedAd,
+  isRewardedReady,
+  REWARDED_COIN_AMOUNT,
+} from '../../lib/adService'
+
+const LoginScreen = lazy(() => import('./LoginScreen'))
 
 interface CoinShopProps {
   coins: number
@@ -16,9 +24,14 @@ export default function CoinShop({
   onPurchase,
   onClose,
 }: CoinShopProps) {
+  const { user } = useAuth()
   const [visible, setVisible] = useState(false)
   const [purchasing, setPurchasing] = useState<string | null>(null)
-  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
+  const [showLogin, setShowLogin] = useState(false)
+  const [pendingPkg, setPendingPkg] = useState<CoinPackage | null>(null)
+  const [watchingAd, setWatchingAd] = useState(false)
+  const [rewardedAvailable, setRewardedAvailable] = useState(isRewardedReady)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible && !showLogin)
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
@@ -37,7 +50,7 @@ export default function CoinShop({
     return () => window.removeEventListener('keydown', onKey)
   }, [handleClose])
 
-  const handlePurchase = useCallback(
+  const doPurchase = useCallback(
     (pkg: CoinPackage) => {
       setPurchasing(pkg.id)
       // Capacitor IAP placeholder — gercek odeme entegrasyonu sonra eklenecek
@@ -48,6 +61,48 @@ export default function CoinShop({
     },
     [onPurchase],
   )
+
+  const handlePurchase = useCallback(
+    (pkg: CoinPackage) => {
+      if (!user) {
+        setPendingPkg(pkg)
+        setShowLogin(true)
+        return
+      }
+      doPurchase(pkg)
+    },
+    [user, doPurchase],
+  )
+
+  useEffect(() => {
+    if (user && pendingPkg) {
+      setShowLogin(false)
+      doPurchase(pendingPkg)
+      setPendingPkg(null)
+    }
+  }, [user, pendingPkg, doPurchase])
+
+  // Rewarded reklam durumunu kontrol et
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setRewardedAvailable(isRewardedReady())
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [])
+
+  const handleWatchAd = useCallback(async () => {
+    setWatchingAd(true)
+    try {
+      const rewarded = await showRewardedAd()
+      if (rewarded) {
+        onPurchase(REWARDED_COIN_AMOUNT)
+      }
+    } catch {
+      // Reklam hatasi
+    }
+    setWatchingAd(false)
+    setRewardedAvailable(isRewardedReady())
+  }, [onPurchase])
 
   return (
     <div
@@ -90,6 +145,40 @@ export default function CoinShop({
             jeton
           </p>
         </div>
+
+        {/* Ucretsiz jeton — reklam izle */}
+        {rewardedAvailable && (
+          <button
+            onClick={handleWatchAd}
+            disabled={watchingAd}
+            aria-label="Reklam izleyerek ucretsiz jeton kazan"
+            className="mb-4 flex w-full items-center gap-3 rounded-xl border-2 border-dashed border-green-400 bg-green-500/5 px-4 py-3 text-left transition-all hover:bg-green-500/10 active:scale-[0.98] disabled:opacity-60 dark:border-green-500/50"
+          >
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-green-500/20 text-green-500">
+              {watchingAd ? (
+                <div className="h-5 w-5 animate-spin rounded-full border-2 border-green-300 border-t-green-500" />
+              ) : (
+                <Play className="h-5 w-5" />
+              )}
+            </div>
+            <div className="flex-1">
+              <div className="flex items-baseline gap-1.5">
+                <span className="text-lg font-bold text-surface-900 dark:text-surface-100">
+                  {REWARDED_COIN_AMOUNT}
+                </span>
+                <span className="text-xs font-medium text-surface-400">
+                  jeton
+                </span>
+              </div>
+              <span className="text-xs text-green-600 dark:text-green-400">
+                Reklam izle — ucretsiz!
+              </span>
+            </div>
+            <span className="rounded-lg bg-green-500 px-3 py-1.5 text-sm font-bold text-white">
+              Izle
+            </span>
+          </button>
+        )}
 
         {/* Paketler */}
         <div className="space-y-3">
@@ -182,6 +271,18 @@ export default function CoinShop({
           entegrasyonu ile gerceklestirilecektir.
         </p>
       </div>
+
+      {/* Login modal */}
+      <Suspense fallback={null}>
+        {showLogin && (
+          <LoginScreen
+            onClose={() => {
+              setShowLogin(false)
+              setPendingPkg(null)
+            }}
+          />
+        )}
+      </Suspense>
     </div>
   )
 }

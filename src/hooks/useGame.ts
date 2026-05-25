@@ -38,6 +38,7 @@ import {
   recordHintUsed,
   recordCoinsEarned,
 } from '../lib/stats'
+import { scheduleSyncToCloud, forceSyncToCloud } from '../lib/sync'
 import {
   generateLevelPuzzle,
   calculateStars,
@@ -178,6 +179,18 @@ export function useGame() {
   useEffect(() => {
     saveCoins(coins)
   }, [coins])
+
+  // Cloud sync sonrasi yerel veriyi yeniden yukle
+  useEffect(() => {
+    function handleSynced() {
+      setCoins(loadCoins())
+      setProgress(loadProgress())
+      const p = generateLevelPuzzle(loadProgress().currentLevel)
+      setPuzzle(p)
+    }
+    window.addEventListener('kelimece:synced', handleSynced)
+    return () => window.removeEventListener('kelimece:synced', handleSynced)
+  }, []) // eslint-disable-line react-hooks/exhaustive-deps
 
   const messageTimeoutRef = useRef<ReturnType<typeof setTimeout> | undefined>(
     undefined,
@@ -365,6 +378,8 @@ export function useGame() {
               )
             }
             processAchievements()
+            // Bolum tamamlaninca hemen sync et
+            forceSyncToCloud()
           }
         }, 600)
       }
@@ -392,6 +407,7 @@ export function useGame() {
       recordCoinsEarned(COIN_PER_BONUS)
       fetchDefinition(word)
       showMessage(`Bonus kelime! +${COIN_PER_BONUS} jeton`, 'success')
+      scheduleSyncToCloud()
       triggerFeedback('bonus')
       playSuccess()
       playCoin()
@@ -454,6 +470,7 @@ export function useGame() {
     recordCoinsEarned(10)
     lastRejectedWordRef.current = null
     showMessage('Bildirildi, teşekkürler! +10 jeton', 'success')
+    scheduleSyncToCloud()
     playCoin()
     vibrate(50)
   }, [puzzle.level, showMessage])
@@ -475,6 +492,7 @@ export function useGame() {
       }
       setCoins((prev) => prev - cost)
       recordHintUsed(cost)
+      scheduleSyncToCloud()
       return true
     },
     [coins, freeHintAvailable, showMessage],
@@ -550,6 +568,7 @@ export function useGame() {
         fireAllFoundConfetti()
         if (!progress.completedLevels.includes(puzzle.level)) {
           recordLevelComplete(stars)
+          forceSyncToCloud()
         }
       }, 600)
     }

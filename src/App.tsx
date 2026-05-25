@@ -12,6 +12,7 @@ import Skeleton from './components/ui/Skeleton'
 import Logo from './components/Logo'
 import { isTutorialCompleted, resetTutorial } from './lib/tutorial'
 import { recordDailyPlay } from './lib/stats'
+import { initAdMob } from './lib/adService'
 
 const LevelComplete = lazy(() => import('./components/screens/LevelComplete'))
 const StatsPanel = lazy(() => import('./components/screens/StatsPanel'))
@@ -56,6 +57,8 @@ function App() {
 
   useEffect(() => {
     recordDailyPlay()
+    // AdMob baslatma — sadece native platformda calisir
+    initAdMob().catch(() => {})
   }, [])
 
   const [showStats, setShowStats] = useState(false)

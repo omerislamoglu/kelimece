@@ -1,5 +1,5 @@
-import { useEffect, useState, useCallback } from 'react'
-import { X, Monitor, Sun, Moon } from 'lucide-react'
+import { useEffect, useState, useCallback, lazy, Suspense } from 'react'
+import { X, Monitor, Sun, Moon, LogOut, LogIn } from 'lucide-react'
 import type { Theme } from '../../hooks/useTheme'
 import {
   isSoundEnabled,
@@ -9,6 +9,9 @@ import {
 } from '../../lib/sounds'
 import { STORAGE_KEYS } from '../../lib/constants'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
+import { useAuth } from '../../contexts/AuthContext'
+
+const LoginScreen = lazy(() => import('./LoginScreen'))
 
 interface SettingsProps {
   theme: Theme
@@ -63,10 +66,12 @@ export default function Settings({
   onShowAchievements,
   onClose,
 }: SettingsProps) {
+  const { user, signOut } = useAuth()
   const [visible, setVisible] = useState(false)
   const [sound, setSound] = useState(isSoundEnabled)
   const [vibration, setVibration] = useState(isVibrationEnabled)
-  const dialogRef = useFocusTrap<HTMLDivElement>(visible)
+  const [showLogin, setShowLogin] = useState(false)
+  const dialogRef = useFocusTrap<HTMLDivElement>(visible && !showLogin)
   const [autoDefs, setAutoDefs] = useState(() => {
     try {
       return localStorage.getItem(STORAGE_KEYS.autoDefinitions) === 'true'
@@ -211,6 +216,54 @@ export default function Settings({
           </div>
         </div>
 
+        {/* Hesap */}
+        <div className="mb-5">
+          <label className="mb-2 block text-xs font-semibold uppercase tracking-wide text-surface-400">
+            Hesap
+          </label>
+          {user ? (
+            <div className="flex items-center gap-3 rounded-xl bg-surface-100 px-4 py-3 dark:bg-surface-800">
+              {user.photoURL ? (
+                <img
+                  src={user.photoURL}
+                  alt=""
+                  className="h-9 w-9 rounded-full"
+                  referrerPolicy="no-referrer"
+                />
+              ) : (
+                <div className="flex h-9 w-9 items-center justify-center rounded-full bg-primary-500 text-sm font-bold text-white dark:bg-accent-500">
+                  {(user.displayName?.[0] ?? user.email?.[0] ?? '?').toLocaleUpperCase('tr-TR')}
+                </div>
+              )}
+              <div className="min-w-0 flex-1">
+                <p className="truncate text-sm font-medium text-surface-700 dark:text-surface-200">
+                  {user.displayName ?? 'Kullanici'}
+                </p>
+                {user.email && (
+                  <p className="truncate text-xs text-surface-400">
+                    {user.email}
+                  </p>
+                )}
+              </div>
+              <button
+                onClick={signOut}
+                aria-label="Cikis yap"
+                className="rounded-lg p-2 text-surface-400 transition-colors hover:bg-surface-200 hover:text-error-500 dark:hover:bg-surface-700"
+              >
+                <LogOut className="h-4 w-4" />
+              </button>
+            </div>
+          ) : (
+            <button
+              onClick={() => setShowLogin(true)}
+              className="flex w-full items-center justify-center gap-2 rounded-xl bg-primary-600 px-4 py-3 text-sm font-semibold text-white transition-colors hover:bg-primary-700 dark:bg-accent-500 dark:hover:bg-accent-400"
+            >
+              <LogIn className="h-4 w-4" />
+              Giris yap
+            </button>
+          )}
+        </div>
+
         {/* Linkler */}
         <div className="mb-5 space-y-2">
           <button
@@ -253,6 +306,11 @@ export default function Settings({
           <p className="mt-2 text-[11px] text-surface-400">Kelimece v1.0.0</p>
         </div>
       </div>
+
+      {/* Login modal */}
+      <Suspense fallback={null}>
+        {showLogin && <LoginScreen onClose={() => setShowLogin(false)} />}
+      </Suspense>
     </div>
   )
 }
