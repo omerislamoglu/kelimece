@@ -16,6 +16,7 @@ import {
   type User,
 } from '../lib/firebase'
 import { syncFromCloud } from '../lib/sync'
+import { initRevenueCat, logOutRevenueCat } from '../lib/revenueCat'
 
 interface AuthState {
   user: User | null
@@ -48,12 +49,18 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         setSyncing(true)
         try {
           await syncFromCloud()
+          // RevenueCat'i kullanici ile bagla
+          initRevenueCat(u.uid).catch(() => {})
         } catch (e) {
           console.warn('[Auth] Sync hatasi:', e)
         } finally {
           setSyncing(false)
         }
       } else if (!u) {
+        // Cikis yapildi — RevenueCat oturumunu sifirla
+        if (prevUid.current) {
+          logOutRevenueCat().catch(() => {})
+        }
         prevUid.current = null
       }
     })

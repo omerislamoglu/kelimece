@@ -1,5 +1,5 @@
 import { useEffect, useState, useCallback, lazy, Suspense } from 'react'
-import { X, Coins, Sparkles, Crown, Zap, Play } from 'lucide-react'
+import { X, Coins, Sparkles, Crown, Zap, Play, RotateCcw } from 'lucide-react'
 import { COIN_PACKAGES, type CoinPackage } from '../../lib/constants'
 import { useFocusTrap } from '../../hooks/useFocusTrap'
 import { useAuth } from '../../contexts/AuthContext'
@@ -8,6 +8,15 @@ import {
   isRewardedReady,
   REWARDED_COIN_AMOUNT,
 } from '../../lib/adService'
+import {
+  purchaseCoins,
+  restorePurchases,
+  isRCReady,
+  fetchPrices,
+  type ProductPrice,
+  PRODUCT_IDS,
+} from '../../lib/revenueCat'
+import { forceSyncToCloud } from '../../lib/sync'
 
 const LoginScreen = lazy(() => import('./LoginScreen'))
 
@@ -31,10 +40,20 @@ export default function CoinShop({
   const [pendingPkg, setPendingPkg] = useState<CoinPackage | null>(null)
   const [watchingAd, setWatchingAd] = useState(false)
   const [rewardedAvailable, setRewardedAvailable] = useState(isRewardedReady)
+  const [restoring, setRestoring] = useState(false)
+  const [purchaseError, setPurchaseError] = useState<string | null>(null)
+  const [storePrices, setStorePrices] = useState<ProductPrice[]>([])
   const dialogRef = useFocusTrap<HTMLDivElement>(visible && !showLogin)
 
   useEffect(() => {
     requestAnimationFrame(() => setVisible(true))
+  }, [])
+
+  // App Store fiyatlarini cek
+  useEffect(() => {
+    if (isRCReady()) {
+      fetchPrices().then(setStorePrices)
+    }
   }, [])
 
   const handleClose = useCallback(() => {
@@ -50,14 +69,24 @@ export default function CoinShop({
     return () => window.removeEventListener('keydown', onKey)
   }, [handleClose])
 
+  // Gercek satin alma
   const doPurchase = useCallback(
-    (pkg: CoinPackage) => {
+    async (pkg: CoinPackage) => {
       setPurchasing(pkg.id)
-      // Capacitor IAP placeholder — gercek odeme entegrasyonu sonra eklenecek
-      setTimeout(() => {
-        onPurchase(pkg.coins)
-        setPurchasing(null)
-      }, 1500)
+      setPurchaseError(null)
+
+      const result = await purchaseCoins(pkg.id, pkg.coins)
+
+      if (result.success) {
+        onPurchase(result.coins)
+        forceSyncToCloud()
+      } else if (!result.cancelled) {
+        setPurchaseError(result.error)
+        // 4 saniye sonra hata mesajini temizle
+        setTimeout(() => setPurchaseError(null), 4000)
+      }
+
+      setPurchasing(null)
     },
     [onPurchase],
   )
@@ -104,6 +133,25 @@ export default function CoinShop({
     setRewardedAvailable(isRewardedReady())
   }, [onPurchase])
 
+  // Restore
+  const handleRestore = useCallback(async () => {
+    setRestoring(true)
+    setPurchaseError(null)
+    const restored = await restorePurchases()
+    setRestoring(false)
+    if (restored) {
+      setPurchaseError(null)
+    }
+  }, [])
+
+  // Fiyat gosterimi: App Store fiyati varsa onu goster, yoksa yerel fiyat
+  function getPriceDisplay(pkg: CoinPackage): string {
+    const productId = PRODUCT_IDS[pkg.id]
+    const storePrice = storePrices.find((p) => p.productId === productId)
+    if (storePrice) return storePrice.priceString
+    return `₺${pkg.price.toFixed(2)}`
+  }
+
   return (
     <div
       className={`fixed inset-0 z-50 flex items-center justify-center p-4 transition-all duration-200 ${
@@ -145,6 +193,13 @@ export default function CoinShop({
             jeton
           </p>
         </div>
+
+        {/* Hata mesaji */}
+        {purchaseError && (
+          <div className="mb-4 rounded-xl bg-error-500/10 px-4 py-3 text-center text-sm text-error-500">
+            {purchaseError}
+          </div>
+        )}
 
         {/* Ucretsiz jeton — reklam izle */}
         {rewardedAvailable && (
@@ -192,8 +247,8 @@ export default function CoinShop({
               <button
                 key={pkg.id}
                 onClick={() => handlePurchase(pkg)}
-                disabled={isPurchasing}
-                aria-label={`${pkg.coins} jeton paketini satın al`}
+                disabled={isPurchasing || purchasing !== null}
+                aria-label={`${pkg.coins} jeton paketini satin al`}
                 className={`relative flex w-full items-center gap-3 rounded-xl border px-4 py-3 text-left transition-all active:scale-[0.98] disabled:opacity-70 ${
                   isBest
                     ? 'border-yellow-400 bg-yellow-500/5 hover:bg-yellow-500/10 dark:border-yellow-500/50'
@@ -255,8 +310,7 @@ export default function CoinShop({
                             : 'bg-surface-100 text-surface-700 dark:bg-surface-700 dark:text-surface-200'
                       }`}
                     >
-                      {'\u20BA'}
-                      {pkg.price.toFixed(2)}
+                      {getPriceDisplay(pkg)}
                     </span>
                   )}
                 </div>
@@ -265,11 +319,22 @@ export default function CoinShop({
           })}
         </div>
 
-        {/* Alt bilgi */}
-        <p className="mt-4 text-center text-[11px] text-surface-400">
-          Satin alimlar geri iade edilemez. Odeme islemi Capacitor IAP
-          entegrasyonu ile gerceklestirilecektir.
-        </p>
+        {/* Restore + Alt bilgi */}
+        <div className="mt-4 text-center">
+          <button
+            onClick={handleRestore}
+            disabled={restoring}
+            className="inline-flex items-center gap-1.5 text-xs font-medium text-primary-600 transition-colors hover:text-primary-700 dark:text-accent-400 dark:hover:text-accent-300"
+          >
+            <RotateCcw
+              className={`h-3.5 w-3.5 ${restoring ? 'animate-spin' : ''}`}
+            />
+            Satin almalari geri yukle
+          </button>
+          <p className="mt-2 text-[11px] text-surface-400">
+            Satin alimlar Apple uzerinden islenircek.
+          </p>
+        </div>
       </div>
 
       {/* Login modal */}
